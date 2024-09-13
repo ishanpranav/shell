@@ -4,7 +4,10 @@
 
 // https://github.com/ishanpranav/codebook/blob/master/lib/string_builder.c
 
+#include <ctype.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include "string_builder.h"
 
 Exception string_builder(StringBuilder instance, size_t capacity)
@@ -59,6 +62,39 @@ Exception string_builder_ensure_capacity(
     instance->buffer = newBuffer;
 
     return 0;
+}
+
+Exception string_builder_append_string(StringBuilder instance, String value)
+{
+    size_t length = strlen(value);
+    size_t newCount = instance->length + length;
+    Exception ex = string_builder_ensure_capacity(instance, newCount);
+
+    if (ex)
+    {
+        return ex;
+    }
+
+    memcpy(instance->buffer + instance->length, value, length);
+
+    instance->length += length;
+    instance->buffer[instance->length] = '\0';
+
+    return 0;
+}
+
+void string_builder_trim_right(StringBuilder instance)
+{
+    for (size_t i = instance->length - 1; i != SIZE_MAX; i--)
+    {
+        if (isspace(instance->buffer[i]))
+        {
+            instance->buffer[i] = '\0';
+            instance->length--;
+
+            break;
+        }
+    }
 }
 
 void finalize_string_builder(StringBuilder instance)

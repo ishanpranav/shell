@@ -5,6 +5,7 @@
 // https://github.com/ishanpranav/codebook/blob/master/lib/string_builder.h
 
 #include <stddef.h>
+#include "euler.h"
 #include "exception.h"
 
 /** Represents a mutable string of characters. */
@@ -40,6 +41,23 @@ Exception string_builder(StringBuilder instance, size_t capacity);
 Exception string_builder_ensure_capacity(
     StringBuilder instance,
     size_t capacity);
+
+/**
+ * Appends a copy of the specified string to this instance.
+ * 
+ * @param instance the `StringBuilder` instance.
+ * @param value    the string to append.
+ * @return An exception; otherwise `0`.
+*/
+Exception string_builder_append_string(StringBuilder instance, String value);
+
+/**
+ * Removes all the trailing white-space characters from the current string
+ * builder.
+ * 
+ * @param instance the `StringBuilder` instance.
+*/
+void string_builder_trim_right(StringBuilder instance);
 
 /**
  * Frees all resources.
