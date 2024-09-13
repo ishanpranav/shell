@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "euler.h"
 #include "string_builder.h"
+#define SHELL_DELIMITERS " \r\n"
 #define SHELL_BUFFER_SIZE 4
 
 Exception environment_current_directory(StringBuilder result)
@@ -75,19 +76,45 @@ static bool shell_read(StringBuilder result)
     do
     {
         char* p = fgets(buffer, SHELL_BUFFER_SIZE, stdin);
-        
+
         euler_ok(string_builder_append_string(result, buffer));
 
         if (!p)
         {
             return false;
         }
-    }
-    while (result->buffer[result->length - 1] != '\n');
+    } while (result->buffer[result->length - 1] != '\n');
 
-    string_builder_trim_right(result);
+    // string_builder_trim_right(result);
 
     return true;
+}
+
+static String* shell_tokenize(StringBuilder value)
+{
+    size_t i = 0;
+    String* result = malloc(sizeof(String) * 4);
+
+    euler_assert(result);
+
+    for (String token = strtok(value->buffer, SHELL_DELIMITERS);
+        token;
+        token = strtok(NULL, SHELL_DELIMITERS))
+    {
+        size_t size = strlen(token) + 1;
+
+        result[i] = malloc(size);
+
+        euler_assert(result[i]);
+        memcpy(result[i], token, size);
+
+        i++;
+    }
+
+    value->length = 0;
+    result[i] = NULL;
+
+    return result;
 }
 
 int main()
@@ -100,8 +127,9 @@ int main()
 
     for (;;)
     {
+        line.length = 0;
         shell_prompt(&currentDirectory);
-        
+
         if (!shell_read(&line))
         {
             break;
@@ -117,7 +145,9 @@ int main()
         }
         else
         {
-            execlp("ls", "ls", NULL);
+            String* args = shell_tokenize(&line);
+
+            execvp(args[0], args);
 
             euler_assert(false);
         }
