@@ -13,6 +13,9 @@
     if (_ex) { \
     fprintf(stderr, "Error: %d at %s line %d.\n", _ex, __FILE__, __LINE__); \
     exit(_ex); } EULER_END_MACRO
+#define euler_assert(condition) EULER_MACRO if (!(condition)) { \
+    fprintf(stderr, "Faulted: %s line %d.\n", __FILE__, __LINE__); \
+    exit(1); } EULER_END_MACRO
 
 /** Represents text as a zero-terminated sequence of characters. */
 typedef char* String;

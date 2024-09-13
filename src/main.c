@@ -1,11 +1,16 @@
-// nyush.c
+// main.c
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
 // References:
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
+//  - https://www.man7.org/linux/man-pages/man2/fork.2.html
 //  - https://www.man7.org/linux/man-pages/man3/getcwd.3.html
+//  - https://www.man7.org/linux/man-pages/man3/exec.3.html
+//  - https://www.man7.org/linux/man-pages/man1/wait.1p.html
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,6 +20,7 @@
 #include <unistd.h>
 #include "euler.h"
 #include "string_builder.h"
+#define SHELL_BUFFER_SIZE 4
 
 Exception environment_current_directory(StringBuilder result)
 {
@@ -64,11 +70,11 @@ static void shell_prompt(StringBuilder currentDirectory)
 
 static bool shell_read(StringBuilder result)
 {
-    char buffer[4];
+    char buffer[SHELL_BUFFER_SIZE];
 
     do
     {
-        char* p = fgets(buffer, 4, stdin);
+        char* p = fgets(buffer, SHELL_BUFFER_SIZE, stdin);
         
         euler_ok(string_builder_append_string(result, buffer));
 
@@ -89,15 +95,33 @@ int main()
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
 
-    euler_ok(string_builder(&line, 4));
-    euler_ok(string_builder(&currentDirectory, 4));
+    euler_ok(string_builder(&line, SHELL_BUFFER_SIZE));
+    euler_ok(string_builder(&currentDirectory, SHELL_BUFFER_SIZE));
 
-    do
+    for (;;)
     {
-        // printf(">> %s\n", line.buffer);
         shell_prompt(&currentDirectory);
+        
+        if (!shell_read(&line))
+        {
+            break;
+        }
+
+        pid_t pid = fork();
+
+        euler_assert(pid >= 0);
+
+        if (pid)
+        {
+            wait(&pid);
+        }
+        else
+        {
+            execlp("ls", "ls", NULL);
+
+            euler_assert(false);
+        }
     }
-    while (shell_read(&line));
 
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
