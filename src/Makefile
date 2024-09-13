@@ -7,9 +7,8 @@ CFLAGS=-pedantic -std=c99 -Wall -Werror -Wextra
 
 all: nyush
 
-nyush: main.o
-
-main.o: main.c
+nyush: main.c
+	$(CC) $(CFLAGS) main.c -o nyush
 
 clean:
 	rm -f *.o nyush
