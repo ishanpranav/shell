@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 // References:
+//  - https://www.man7.org/linux/man-pages/man2/chdir.2.html
 //  - https://www.man7.org/linux/man-pages/man3/exec.3.html
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
 //  - https://www.man7.org/linux/man-pages/man2/fork.2.html
@@ -85,8 +86,7 @@ static bool shell_read(StringBuilder result)
         {
             return false;
         }
-    } 
-    while (result->buffer[result->length - 1] != '\n');
+    } while (result->buffer[result->length - 1] != '\n');
 
     return true;
 }
@@ -106,6 +106,28 @@ static bool shell_execute(String args[])
 
     execvp(args[0], args);
     fprintf(stderr, "Error: invalid program\n");
+
+    return false;
+}
+
+static bool shell_handle_builtin(ArgumentVector args)
+{
+    if (strcmp(args->buffer[0], "cd") == 0)
+    {
+        if (args->count != 2)
+        {
+            fprintf(stderr, "Error: invalid command\n");
+
+            return true;
+        }
+
+        if (chdir(args->buffer[1]) == -1)
+        {
+            fprintf(stderr, "Error: invalid directory\n");
+        }
+
+        return true;
+    }
 
     return false;
 }
@@ -136,17 +158,12 @@ int main()
         argument_vector_clear(&args);
         euler_ok(argument_vector_tokenize(&args, &line));
 
-        if (args.count == 0)
+        if (args.count == 0 || shell_handle_builtin(&args))
         {
             continue;
         }
-        
-        if (strcmp(args.buffer[0], "exit") == 0)
-        {
-            break;
-        }
 
-        if (!shell_execute(args.buffer))
+        if (strcmp(args.buffer[0], "exit") == 0 || !shell_execute(args.buffer))
         {
             break;
         }
