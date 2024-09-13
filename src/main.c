@@ -97,7 +97,7 @@ static bool shell_execute(String args[])
 
     if (pid)
     {
-        wait(&pid);
+        waitpid(-1, NULL, 0);
 
         return true;
     }
