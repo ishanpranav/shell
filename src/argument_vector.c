@@ -95,6 +95,13 @@ Exception argument_vector_tokenize(ArgumentVector instance, StringBuilder value)
 
 void argument_vector_clear(ArgumentVector instance)
 {
+    while (instance->count)
+    {
+        instance->count--;
+
+        free(instance->buffer[instance->count]);
+    }
+
     instance->count = 0;
     instance->buffer[0] = NULL;
 }
@@ -102,4 +109,5 @@ void argument_vector_clear(ArgumentVector instance)
 void finalize_argument_vector(ArgumentVector instance)
 {
     argument_vector_clear(instance);
+    free(instance->buffer);
 }
