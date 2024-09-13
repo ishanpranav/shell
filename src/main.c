@@ -18,9 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "argument_vector.h"
 #include "euler.h"
 #include "string_builder.h"
-#define SHELL_DELIMITERS " \r\n"
 #define SHELL_BUFFER_SIZE 4
 
 Exception environment_current_directory(StringBuilder result)
@@ -83,51 +83,43 @@ static bool shell_read(StringBuilder result)
         {
             return false;
         }
-    } while (result->buffer[result->length - 1] != '\n');
-
-    // string_builder_trim_right(result);
+    } 
+    while (result->buffer[result->length - 1] != '\n');
 
     return true;
 }
 
-static String* shell_tokenize(StringBuilder value)
+static bool shell_execute(String args[])
 {
-    size_t i = 0;
-    String* result = malloc(sizeof(String) * 4);
+    pid_t pid = fork();
 
-    euler_assert(result);
+    euler_assert(pid >= 0);
 
-    for (String token = strtok(value->buffer, SHELL_DELIMITERS);
-        token;
-        token = strtok(NULL, SHELL_DELIMITERS))
+    if (pid)
     {
-        size_t size = strlen(token) + 1;
+        wait(&pid);
 
-        result[i] = malloc(size);
-
-        euler_assert(result[i]);
-        memcpy(result[i], token, size);
-
-        i++;
+        return true;
     }
 
-    value->length = 0;
-    result[i] = NULL;
+    execvp(args[0], args);
+    fprintf(stderr, "Error: invalid program\n");
 
-    return result;
+    return false;
 }
 
 int main()
 {
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
+    struct ArgumentVector args;
 
-    euler_ok(string_builder(&line, SHELL_BUFFER_SIZE));
-    euler_ok(string_builder(&currentDirectory, SHELL_BUFFER_SIZE));
+    euler_ok(string_builder(&line, 0));
+    euler_ok(string_builder(&currentDirectory, 0));
+    euler_ok(argument_vector(&args, 0));
 
     for (;;)
     {
-        line.length = 0;
         shell_prompt(&currentDirectory);
 
         if (!shell_read(&line))
@@ -135,26 +127,23 @@ int main()
             break;
         }
 
-        pid_t pid = fork();
+        argument_vector_clear(&args);
+        euler_ok(argument_vector_tokenize(&args, &line));
 
-        euler_assert(pid >= 0);
-
-        if (pid)
+        if (strcmp(args.buffer[0], "exit") == 0)
         {
-            wait(&pid);
+            break;
         }
-        else
+
+        if (!shell_execute(args.buffer))
         {
-            String* args = shell_tokenize(&line);
-
-            execvp(args[0], args);
-
-            euler_assert(false);
+            break;
         }
     }
 
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
+    finalize_argument_vector(&args);
 
     return 0;
 }

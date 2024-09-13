@@ -4,6 +4,8 @@
 
 // https://github.com/ishanpranav/codebook/blob/master/lib/string_builder.h
 
+#ifndef STRING_BUILDER_4d4532d6f2db4b4088af8db287de600b
+#define STRING_BUILDER_4d4532d6f2db4b4088af8db287de600b
 #include <stddef.h>
 #include "euler.h"
 #include "exception.h"
@@ -52,17 +54,11 @@ Exception string_builder_ensure_capacity(
 Exception string_builder_append_string(StringBuilder instance, String value);
 
 /**
- * Removes all the trailing white-space characters from the current string
- * builder.
- * 
- * @param instance the `StringBuilder` instance.
-*/
-void string_builder_trim_right(StringBuilder instance);
-
-/**
  * Frees all resources.
  * 
  * @param instance the `StringBuilder` instance. This method corrupts the
  *                 `instance` argument.
 */
 void finalize_string_builder(StringBuilder instance);
+
+#endif

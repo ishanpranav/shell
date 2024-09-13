@@ -57,7 +57,7 @@ Exception string_builder_ensure_capacity(
         return EXCEPTION_OUT_OF_MEMORY;
     }
 
-    newBuffer[instance->length + 1] = '\0';
+    newBuffer[instance->length] = '\0';
     instance->capacity = newCapacity;
     instance->buffer = newBuffer;
 
@@ -67,8 +67,8 @@ Exception string_builder_ensure_capacity(
 Exception string_builder_append_string(StringBuilder instance, String value)
 {
     size_t length = strlen(value);
-    size_t newCount = instance->length + length;
-    Exception ex = string_builder_ensure_capacity(instance, newCount);
+    size_t newLength = instance->length + length;
+    Exception ex = string_builder_ensure_capacity(instance, newLength);
 
     if (ex)
     {
@@ -81,20 +81,6 @@ Exception string_builder_append_string(StringBuilder instance, String value)
     instance->buffer[instance->length] = '\0';
 
     return 0;
-}
-
-void string_builder_trim_right(StringBuilder instance)
-{
-    for (size_t i = instance->length - 1; i != SIZE_MAX; i--)
-    {
-        if (isspace(instance->buffer[i]))
-        {
-            instance->buffer[i] = '\0';
-            instance->length--;
-
-            break;
-        }
-    }
 }
 
 void finalize_string_builder(StringBuilder instance)
