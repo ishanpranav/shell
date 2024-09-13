@@ -3,15 +3,17 @@
 // Licensed under the MIT license.
 
 // References:
+//  - https://www.man7.org/linux/man-pages/man3/exec.3.html
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
 //  - https://www.man7.org/linux/man-pages/man2/fork.2.html
 //  - https://www.man7.org/linux/man-pages/man3/getcwd.3.html
-//  - https://www.man7.org/linux/man-pages/man3/exec.3.html
+//  - https://www.man7.org/linux/man-pages/man2/signal.2.html
 //  - https://www.man7.org/linux/man-pages/man1/wait.1p.html
 
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -110,6 +112,10 @@ static bool shell_execute(String args[])
 
 int main()
 {
+    signal(SIGINT, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
     struct ArgumentVector args;
@@ -130,6 +136,11 @@ int main()
         argument_vector_clear(&args);
         euler_ok(argument_vector_tokenize(&args, &line));
 
+        if (args.count == 0)
+        {
+            continue;
+        }
+        
         if (strcmp(args.buffer[0], "exit") == 0)
         {
             break;
