@@ -131,7 +131,7 @@ int main()
         }
 
         parser(&recursiveDescentParser, &args);
-        parser_parse_command(&recursiveDescentParser);
+        parser_parse(&recursiveDescentParser);
 
         if (recursiveDescentParser.faulted)
         {
@@ -139,7 +139,7 @@ int main()
 
             continue;
         }
-        
+
         if (recursiveDescentParser.instruction.type == INSTRUCTION_TYPE_EXIT)
         {
             break;
@@ -171,6 +171,7 @@ int main()
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
     finalize_argument_vector(&args);
+    finalize_parser(&recursiveDescentParser);
 
     return 0;
 }

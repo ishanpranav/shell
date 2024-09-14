@@ -22,5 +22,5 @@ struct Parser
 typedef struct Parser* Parser;
 
 void parser(Parser instance, ArgumentVector args);
-void parser_parse_command(Parser instance);
+void parser_parse(Parser instance);
 void finalize_parser(Parser instance);

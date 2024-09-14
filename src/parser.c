@@ -23,9 +23,8 @@ String SYMBOL_STRINGS[SYMBOLS] =
     [SYMBOL_INVALID] = NULL
 };
 
-void parser(Parser instance, ArgumentVector args)
+static void parser_reset(Parser instance)
 {
-    instance->args = args;
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
@@ -34,7 +33,23 @@ void parser(Parser instance, ArgumentVector args)
     instance->instruction.write = NULL;
     instance->instruction.append = NULL;
     instance->instruction.arguments = NULL;
+
+    while (instance->instruction.nextPipe)
+    {
+        Instruction next = instance->instruction.nextPipe->nextPipe;
+
+        free(instance->instruction.nextPipe);
+
+        instance->instruction.nextPipe = next;
+    }
+}
+
+void parser(Parser instance, ArgumentVector args)
+{
+    instance->args = args;
     instance->instruction.nextPipe = NULL;
+
+    parser_reset(instance);
 }
 
 static Symbol parser_classify_token(String value)
@@ -157,10 +172,8 @@ static void parser_parse_recursive(Parser instance)
     parser_expect(instance, SYMBOL_NONE);
 }
 
-void parser_parse_command(Parser instance)
+static void parser_parse_command(Parser instance)
 {
-    parser_next(instance);
-
     if (parser_accept(instance, SYMBOL_NONE)) 
     {
         return;
@@ -230,14 +243,14 @@ void parser_parse_command(Parser instance)
     parser_expect(instance, SYMBOL_NONE);
 }
 
+void parser_parse(Parser instance)
+{
+    parser_reset(instance);
+    parser_next(instance);
+    parser_parse_command(instance);
+}
+
 void finalize_parser(Parser instance)
 {
-    while (instance->instruction.nextPipe)
-    {
-        Instruction next = instance->instruction.nextPipe->nextPipe;
-
-        free(instance->instruction.nextPipe);
-
-        instance->instruction.nextPipe = next;
-    }
+    parser_reset(instance);
 }
