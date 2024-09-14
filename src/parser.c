@@ -29,6 +29,12 @@ void parser(Parser instance, ArgumentVector args)
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
+    instance->instruction.type = INSTRUCTION_TYPE_NONE;
+    instance->instruction.read = NULL;
+    instance->instruction.write = NULL;
+    instance->instruction.append = NULL;
+    instance->instruction.arguments = NULL;
+    instance->instruction.nextPipe = NULL;
 }
 
 static Symbol parser_classify_token(String value)
@@ -173,6 +179,8 @@ void parser_parse_command(Parser instance)
     {
         parser_expect(instance, SYMBOL_NONE);
 
+        instance->instruction.type = INSTRUCTION_TYPE_EXIT;
+
         return;
     }
 
@@ -220,4 +228,16 @@ void parser_parse_command(Parser instance)
     }
 
     parser_expect(instance, SYMBOL_NONE);
+}
+
+void finalize_parser(Parser instance)
+{
+    while (instance->instruction.nextPipe)
+    {
+        Instruction next = instance->instruction.nextPipe->nextPipe;
+
+        free(instance->instruction.nextPipe);
+
+        instance->instruction.nextPipe = next;
+    }
 }

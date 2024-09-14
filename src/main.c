@@ -25,12 +25,12 @@
 #include "string_builder.h"
 #define SHELL_BUFFER_SIZE 4
 
-static Handler SHELL_HANDLERS[] = 
-{
-    exit_handler,
-    change_directory_handler,
-    execute_handler
-};
+// static Handler SHELL_HANDLERS[] = 
+// {
+//     exit_handler,
+//     change_directory_handler,
+//     execute_handler
+// };
 
 Exception environment_current_directory(StringBuilder result)
 {
@@ -138,6 +138,11 @@ int main()
             fprintf(stderr, "Error: invalid command\n");
 
             continue;
+        }
+        
+        if (recursiveDescentParser.instruction.type == INSTRUCTION_TYPE_EXIT)
+        {
+            break;
         }
 
         // HandleResult handleResult;

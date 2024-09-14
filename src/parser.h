@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include "argument_vector.h"
+#include "instruction.h"
 #include "symbol.h"
 
 struct Parser
@@ -15,9 +16,11 @@ struct Parser
     enum Symbol current;
     size_t index;
     struct ArgumentVector* args;
+    struct Instruction instruction;
 };
 
 typedef struct Parser* Parser;
 
 void parser(Parser instance, ArgumentVector args);
 void parser_parse_command(Parser instance);
+void finalize_parser(Parser instance);
