@@ -21,6 +21,7 @@
 #include "argument_vector.h"
 #include "euler.h"
 #include "handler.h"
+#include "parser.h"
 #include "string_builder.h"
 #define SHELL_BUFFER_SIZE 4
 
@@ -128,27 +129,30 @@ int main()
             continue;
         }
 
-        HandleResult handleResult;
+        parser(&args);
+        command();
 
-        for (Handler* handler = SHELL_HANDLERS; *handler; handler++)
-        {
-            handleResult = (*handler)(&args);
+        // HandleResult handleResult;
 
-            if (handleResult)
-            {
-                break;
-            }
-        }
+        // for (Handler* handler = SHELL_HANDLERS; *handler; handler++)
+        // {
+        //     handleResult = (*handler)(&args);
 
-        if (handleResult == HANDLE_RESULT_CONTINUE)
-        {
-            continue;
-        }
+        //     if (handleResult)
+        //     {
+        //         break;
+        //     }
+        // }
 
-        if (handleResult == HANDLE_RESULT_EXIT)
-        {
-            break;
-        }
+        // if (handleResult == HANDLE_RESULT_CONTINUE)
+        // {
+        //     continue;
+        // }
+
+        // if (handleResult == HANDLE_RESULT_EXIT)
+        // {
+        //     break;
+        // }
     }
 
     finalize_string_builder(&line);
