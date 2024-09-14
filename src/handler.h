@@ -10,4 +10,6 @@ typedef bool (*Handler)(Instruction instruction);
 
 bool exit_handler(Instruction instruction);
 bool change_directory_handler(Instruction instruction);
+bool foreground_handler(Instruction instruction);
+bool jobs_handler(Instruction instruction);
 bool execute_handler(Instruction instruction);

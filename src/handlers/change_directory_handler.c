@@ -1,4 +1,4 @@
-// change_directory_handler.h
+// change_directory_handler.c
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 

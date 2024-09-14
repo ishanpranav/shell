@@ -198,8 +198,7 @@ static void parser_parse_command(Parser instance)
         return;
     }
 
-    if (parser_accept(instance, SYMBOL_EXIT) || 
-        parser_accept(instance, SYMBOL_JOBS)) 
+    if (parser_accept(instance, SYMBOL_EXIT)) 
     {
         parser_expect(instance, SYMBOL_NONE);
 
@@ -208,12 +207,21 @@ static void parser_parse_command(Parser instance)
         return;
     }
 
-    if (parser_accept(instance, SYMBOL_FOREGROUND)) 
+    if (parser_accept(instance, SYMBOL_JOBS))
     {
-        parser_parse_argument(instance);
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.execute = NULL;
+        instance->instruction.execute = jobs_handler;
+
+        return;
+    }
+
+    if (parser_accept(instance, SYMBOL_FOREGROUND)) 
+    {
+        instance->instruction.payload.argument = parser_parse_argument(instance);
+        parser_expect(instance, SYMBOL_NONE);
+
+        instance->instruction.execute = foreground_handler;
 
         return;
     }

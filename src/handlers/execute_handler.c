@@ -1,4 +1,4 @@
-// execute_handler.h
+// execute_handler.c
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
