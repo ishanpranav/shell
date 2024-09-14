@@ -38,23 +38,24 @@ static void parser_reset(Parser instance)
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
-    instance->first = NULL;
 
-    if (instance->instruction)
+    if (!instance->instruction)
     {
-        while (instance->instruction->nextPipe)
-        {
-            Instruction next = instance->instruction->nextPipe->nextPipe;
-
-            free(instance->instruction->nextPipe);
-
-            instance->instruction->nextPipe = next;
-        }
-
-        free(instance->instruction);
-
-        instance->instruction = NULL;
+        return;
     }
+
+    while (instance->instruction->nextPipe)
+    {
+        Instruction next = instance->instruction->nextPipe->nextPipe;
+
+        free(instance->instruction->nextPipe);
+
+        instance->instruction->nextPipe = next;
+    }
+
+    free(instance->instruction);
+
+    instance->instruction = NULL;
 }
 
 void parser(Parser instance, ArgumentVector args)
@@ -137,7 +138,7 @@ static void parser_parse_command_name(Parser instance)
 {
     parser_expect(instance, SYMBOL_STRING);
 }
-
+#include <stdio.h>
 static void parser_parse_command_text(Parser instance)
 {
     size_t offset = instance->index - 1;

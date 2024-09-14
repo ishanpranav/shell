@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "../handler.h"
@@ -22,7 +23,7 @@ bool execute_handler(Instruction instruction)
         return true;
     }
 
-    String* arguments = malloc(instruction->length * sizeof * arguments);
+    String* arguments = malloc((instruction->length + 1) * sizeof * arguments);
 
     euler_assert(arguments);
 
@@ -32,6 +33,8 @@ bool execute_handler(Instruction instruction)
 
         euler_assert(arguments[i]);
     }
+
+    arguments[instruction->length] = NULL;
 
     if (strchr(arguments[0], '/'))
     {
