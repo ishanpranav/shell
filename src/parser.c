@@ -138,7 +138,7 @@ static void parser_parse_command_name(Parser instance)
 {
     parser_expect(instance, SYMBOL_STRING);
 }
-#include <stdio.h>
+
 static void parser_parse_command_text(Parser instance)
 {
     size_t offset = instance->index - 1;

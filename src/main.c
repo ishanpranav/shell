@@ -106,6 +106,8 @@ int main()
     euler_ok(string_builder(&currentDirectory, 0));
     euler_ok(argument_vector(&args, 0));
 
+    parser(&recursiveDescentParser, &args);
+
     for (;;)
     {
         shell_prompt(&currentDirectory);
@@ -123,7 +125,6 @@ int main()
             continue;
         }
 
-        parser(&recursiveDescentParser, &args);
         parser_parse(&recursiveDescentParser);
 
         if (recursiveDescentParser.faulted)
