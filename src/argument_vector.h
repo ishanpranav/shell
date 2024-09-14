@@ -2,6 +2,8 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+#ifndef ARGUMENT_VECTOR_57fd44ec18234de6ad3bdfba493e374b
+#define ARGUMENT_VECTOR_57fd44ec18234de6ad3bdfba493e374b
 #include <stddef.h>
 #include "euler.h"
 #include "exception.h"
@@ -28,3 +30,5 @@ Exception argument_vector_tokenize(
 
 void argument_vector_clear(ArgumentVector instance);
 void finalize_argument_vector(ArgumentVector instance);
+
+#endif

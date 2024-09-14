@@ -17,16 +17,21 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "argument_vector.h"
 #include "euler.h"
-#include "exit_result.h"
+#include "handler.h"
+#include "main.h"
 #include "string_builder.h"
 #define SHELL_BUFFER_SIZE 4
-#define shell_error_command() fprintf(stderr, "Error: invalid command\n")
+
+static Handler SHELL_HANDLERS[] = 
+{
+    exit_handler,
+    change_directory_handler
+};
 
 Exception environment_current_directory(StringBuilder result)
 {
@@ -94,7 +99,7 @@ static bool shell_read(StringBuilder result)
     return true;
 }
 
-static bool shell_execute(String args[])
+static HandleResult shell_execute(String args[])
 {
     pid_t pid = fork();
 
@@ -104,52 +109,13 @@ static bool shell_execute(String args[])
     {
         waitpid(-1, NULL, 0);
 
-        return true;
+        return HANDLE_RESULT_CONTINUE;
     }
-
-    execvp(args[0], args);
+ 
+    execv(args[0], args);
     fprintf(stderr, "Error: invalid program\n");
 
-    return false;
-}
-
-static bool shell_handle_change_directory(ArgumentVector args)
-{
-    if (strcmp(args->buffer[0], "cd") != 0)
-    {
-        return false;
-    }
-
-    if (args->count != 2)
-    {
-        shell_error_command();
-
-        return true;
-    }
-
-    if (chdir(args->buffer[1]) == -1)
-    {
-        fprintf(stderr, "Error: invalid directory\n");
-    }
-
-    return true;
-}
-
-ExitResult shell_handle_exit(ArgumentVector args)
-{
-    if (strcmp(args->buffer[0], "exit") != 0)
-    {
-        return EXIT_RESULT_NONE;
-    }
-
-    if (args->count != 1)
-    {
-        shell_error_command();
-
-        return EXIT_RESULT_CONTINUE;
-    }
-
-    return EXIT_RESULT_EXIT;
+    return HANDLE_RESULT_EXIT;
 }
 
 int main()
@@ -178,25 +144,39 @@ int main()
         argument_vector_clear(&args);
         euler_ok(argument_vector_tokenize(&args, &line));
 
-        if (args.count == 0 || shell_handle_change_directory(&args))
+        if (args.count == 0)
         {
             continue;
         }
 
-        switch (shell_handle_exit(&args))
+        HandleResult handleResult;
+
+        for (Handler* handler = SHELL_HANDLERS; *handler; handler++)
         {
-            case EXIT_RESULT_NONE: break;
-            case EXIT_RESULT_CONTINUE: continue;
-            case EXIT_RESULT_EXIT: goto free;
+            handleResult = (*handler)(&args);
+
+            if (handleResult == HANDLE_RESULT_CONTINUE)
+            {
+                break;
+            }
+
+            if (handleResult == HANDLE_RESULT_EXIT)
+            {
+                break;
+            }
         }
 
-        if (!shell_execute(args.buffer))
+        if (handleResult == HANDLE_RESULT_CONTINUE)
+        {
+            continue;
+        }
+
+        if (handleResult == HANDLE_RESULT_EXIT || !shell_execute(args.buffer))
         {
             break;
         }
     }
 
-free:
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
     finalize_argument_vector(&args);
