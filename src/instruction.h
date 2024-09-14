@@ -13,6 +13,7 @@ union InstructionPayload
 
 struct Instruction
 {
+    size_t length;
     char* read;
     char* write;
     char* append;

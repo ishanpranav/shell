@@ -29,10 +29,11 @@ static void parser_reset(Parser instance)
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
-    instance->instruction.execute = NULL;
+    instance->instruction.length = 0;
     instance->instruction.read = NULL;
     instance->instruction.write = NULL;
     instance->instruction.append = NULL;
+    instance->instruction.execute = NULL;
 
     memset(
         &instance->instruction.payload, 
@@ -110,23 +111,23 @@ static bool parser_accept(Parser instance, Symbol symbol)
     return false;
 }
 
-static bool parser_expect(Parser instance, Symbol symbol)
+static void parser_expect(Parser instance, Symbol symbol)
 {
     if (parser_accept(instance, symbol))
     {
-        return true;
+        return;
     }
 
     instance->faulted = true;
-
-    return false;
 }
 
-static String parser_parse_argument(Parser instance)
+static size_t parser_parse_argument(Parser instance)
 {
+    size_t result = instance->index - 1;
+
     parser_expect(instance, SYMBOL_STRING);
 
-    return instance->args->buffer[instance->index - 1];
+    return result;
 }
 
 static void parser_parse_command_name(Parser instance) 
@@ -134,14 +135,18 @@ static void parser_parse_command_name(Parser instance)
     parser_expect(instance, SYMBOL_STRING);
 }
 
-static void parser_parse_command_text(Parser instance)
+static size_t parser_parse_command_text(Parser instance)
 {
+    size_t result = instance->index - 1;
+
     parser_parse_command_name(instance);
 
     while (instance->current == SYMBOL_STRING) 
     {
-        parser_parse_argument(instance);
+        result = parser_parse_argument(instance);
     }
+
+    return result;
 }
 
 static void parser_parse_file_name(Parser instance)
@@ -188,12 +193,12 @@ static void parser_parse_command(Parser instance)
 
     if (parser_accept(instance, SYMBOL_CHANGE_DIRECTORY)) 
     {
-        instance->instruction.payload.argument = 
-            parser_parse_argument(instance);
+        size_t offset = parser_parse_argument(instance);
 
         parser_expect(instance, SYMBOL_NONE);
 
         instance->instruction.execute = change_directory_handler;
+        instance->instruction.payload.argument = instance->args->buffer[offset];
 
         return;
     }
@@ -218,15 +223,23 @@ static void parser_parse_command(Parser instance)
 
     if (parser_accept(instance, SYMBOL_FOREGROUND)) 
     {
-        instance->instruction.payload.argument = parser_parse_argument(instance);
+        size_t offset = parser_parse_argument(instance);
+
         parser_expect(instance, SYMBOL_NONE);
 
         instance->instruction.execute = foreground_handler;
+        instance->instruction.payload.argument = instance->args->buffer[offset];
 
         return;
     }
 
-    parser_parse_command_text(instance);
+    instance->instruction.execute = execute_handler;
+
+    size_t min = instance->index - 1;
+    size_t max =  parser_parse_command_text(instance) + 1;
+
+    instance->instruction.length = max - min;
+    instance->instruction.payload.arguments = instance->args->buffer + min;
 
     if (parser_accept(instance, SYMBOL_READ)) 
     {
