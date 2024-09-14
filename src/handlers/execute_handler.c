@@ -2,8 +2,17 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+// References:
+//  - https://www.man7.org/linux/man-pages/man3/exec.3.html
+//  - https://www.man7.org/linux/man-pages/man2/fork.2.html
+//  - https://www.man7.org/linux/man-pages/man2/open.2.html
+//  - https://www.man7.org/linux/man-pages/man2/wait.2.html
+//  - https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
+
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +44,14 @@ bool execute_handler(Instruction instruction)
     }
 
     arguments[instruction->length] = NULL;
+
+    if (instruction->write)
+    {
+        int descriptor = creat(instruction->write, S_IRUSR | S_IWUSR);
+
+        euler_assert(descriptor != -1);
+        euler_assert(close(descriptor) != -1);
+    }
 
     if (strchr(arguments[0], '/'))
     {

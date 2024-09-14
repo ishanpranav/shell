@@ -3,13 +3,9 @@
 // Licensed under the MIT license.
 
 // References:
-//  - https://www.man7.org/linux/man-pages/man2/chdir.2.html
-//  - https://www.man7.org/linux/man-pages/man3/exec.3.html
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
-//  - https://www.man7.org/linux/man-pages/man2/fork.2.html
 //  - https://www.man7.org/linux/man-pages/man3/getcwd.3.html
 //  - https://www.man7.org/linux/man-pages/man2/signal.2.html
-//  - https://www.man7.org/linux/man-pages/man1/wait.1p.html
 
 #include <errno.h>
 #include <signal.h>

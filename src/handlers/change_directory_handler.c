@@ -2,6 +2,9 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+// References:
+//  - https://www.man7.org/linux/man-pages/man2/chdir.2.html
+
 #include <stdio.h>
 #include <unistd.h>
 #include "../handler.h"
