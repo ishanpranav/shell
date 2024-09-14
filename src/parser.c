@@ -6,60 +6,50 @@
 #include <string.h>
 #include "euler.h"
 #include "parser.h"
-#include "symbol.h"
 
-Symbol sym;
-ArgumentVector args;
-size_t i;
-char* invalidChars = "><|*!`'\"";
-bool error;
+char* INVALID_CHARS = "><*!`'\"|";
+String SYMBOL_STRINGS[SYMBOLS] =
+{
+    [SYMBOL_NONE] = NULL,
+    [SYMBOL_CHANGE_DIRECTORY] = "cd",
+    [SYMBOL_EXIT] = "exit",
+    [SYMBOL_FOREGROUND] = "fg",
+    [SYMBOL_JOBS] = "jobs",
+    [SYMBOL_READ] = "<",
+    [SYMBOL_WRITE] = ">",
+    [SYMBOL_APPEND] = ">>",
+    [SYMBOL_PIPE] = "|",
+    [SYMBOL_STRING] = NULL,
+    [SYMBOL_INVALID] = NULL
+};
 
-bool iserror() {
-    return error;
+void parser(Parser instance, ArgumentVector args)
+{
+    instance->args = args;
+    instance->current = SYMBOL_NONE;
+    instance->index = 0;
+    instance->faulted = false;
 }
 
-void parser(ArgumentVector a) {
-    sym = SYMBOL_NONE;
-    args = a;
-    i = 0;
-    error = false;
-}
+static Symbol parser_classify_token(String value)
+{
+    for (Symbol symbol = 0; symbol < SYMBOLS; symbol++)
+    {
+        if (!SYMBOL_STRINGS[symbol])
+        {
+            continue;
+        }
 
-Symbol classify(String value) {
-    if (strcmp(value, "cd") == 0) {
-        return SYMBOL_CHANGE_DIRECTORY;
+        if (strcmp(value, SYMBOL_STRINGS[symbol]) == 0)
+        {
+            return symbol;
+        }
     }
-
-    if (strcmp(value, "exit") == 0) {
-        return SYMBOL_EXIT;
-    }
-
-    if (strcmp(value, "fg") == 0) {
-        return SYMBOL_FOREGROUND;
-    }
-
-    if (strcmp(value, "jobs") == 0) {
-        return SYMBOL_JOBS;
-    }
-
-    if (strcmp(value, "<") == 0) {
-        return SYMBOL_READ;
-    }
-
-    if (strcmp(value, ">") == 0) {
-        return SYMBOL_WRITE;
-    }
-
-    if (strcmp(value, ">>") == 0) {
-        return SYMBOL_APPEND;
-    }
-
-    if (strcmp(value, "|") == 0) {
-        return SYMBOL_PIPE;
-    }
-
-    for (char* p = invalidChars; *p; p++) {
-        if (strchr(value, *p)) {
+    
+    for (char* p = INVALID_CHARS; *p; p++) 
+    {
+        if (strchr(value, *p)) 
+        {
             return SYMBOL_INVALID;
         }
     }
@@ -67,20 +57,26 @@ Symbol classify(String value) {
     return SYMBOL_STRING;
 }
 
-void nextsym() {
-    if (i >= args->count) {
-        sym = SYMBOL_NONE;
+static void parser_next(Parser instance)
+{
+    ArgumentVector args = instance->args;
+
+    if (instance->index >= args->count) 
+    {
+        instance->current = SYMBOL_NONE;
 
         return;
     }
 
-    sym = classify(args->buffer[i]);
-    i++;
+    instance->current = parser_classify_token(args->buffer[instance->index]);
+    instance->index++;
 }
 
-bool accept(Symbol s) {
-    if (sym == s) {
-        nextsym();
+static bool parser_accept(Parser instance, Symbol symbol) 
+{
+    if (instance->current == symbol)
+    {
+        parser_next(instance);
 
         return true;
     }
@@ -88,116 +84,140 @@ bool accept(Symbol s) {
     return false;
 }
 
-bool expect(Symbol s) {
-    if (accept(s)) {
+static bool parser_expect(Parser instance, Symbol symbol)
+{
+    if (parser_accept(instance, symbol))
+    {
         return true;
     }
 
-    error = true;
+    instance->faulted = true;
 
     return false;
 }
 
-void argument() {
-    expect(SYMBOL_STRING);
+static void parser_parse_argument(Parser instance)
+{
+    parser_expect(instance, SYMBOL_STRING);
 }
 
-void command_name() {
-    expect(SYMBOL_STRING);
+static void parser_parse_command_name(Parser instance) 
+{
+    parser_expect(instance, SYMBOL_STRING);
 }
 
-void command_text() {
-    command_name();
+static void parser_parse_command_text(Parser instance)
+{
+    parser_parse_command_name(instance);
 
-    while (sym == SYMBOL_STRING) {
-        argument();
+    while (instance->current == SYMBOL_STRING) 
+    {
+        parser_parse_argument(instance);
     }
 }
 
-void file_name() {
-    expect(SYMBOL_STRING);
+static void parser_parse_file_name(Parser instance)
+{
+    parser_expect(instance, SYMBOL_STRING);
 }
 
-void terminate() {
-    if (accept(SYMBOL_WRITE) || accept(SYMBOL_APPEND)) {
-        expect(SYMBOL_STRING);
+static void parser_parse_terminate(Parser instance)
+{
+    if (parser_accept(instance, SYMBOL_WRITE) || 
+        parser_accept(instance, SYMBOL_APPEND)) 
+    {
+        parser_expect(instance, SYMBOL_STRING);
 
         return;
     }
 
-    expect(SYMBOL_NONE);
+    parser_expect(instance, SYMBOL_NONE);
 }
 
-void recursive() {
-    expect(SYMBOL_PIPE);
-    command_text();
+static void parser_parse_recursive(Parser instance) 
+{
+    parser_expect(instance, SYMBOL_PIPE);
+    parser_parse_command_text(instance);
 
-    if (sym == SYMBOL_PIPE) {
-        recursive();
+    if (instance->current == SYMBOL_PIPE) 
+    {
+        parser_parse_recursive(instance);
     }
-    else {
-        terminate();
+    else 
+    {
+        parser_parse_terminate(instance);
     }
 
-    expect(SYMBOL_NONE);
+    parser_expect(instance, SYMBOL_NONE);
 }
 
-void command() {
-    nextsym();
+void parser_parse_command(Parser instance)
+{
+    parser_next(instance);
 
-    if (accept(SYMBOL_NONE)) {
+    if (parser_accept(instance, SYMBOL_NONE)) 
+    {
         return;
     }
 
-    if (accept(SYMBOL_CHANGE_DIRECTORY)) {
-        argument();
-        expect(SYMBOL_NONE);
-
-        return;
-    }
-
-    if (accept(SYMBOL_EXIT) || accept(SYMBOL_JOBS)) {
-        expect(SYMBOL_NONE);
-
-        return;
-    }
-
-    if (accept(SYMBOL_FOREGROUND)) {
-        argument();
-        expect(SYMBOL_NONE);
+    if (parser_accept(instance, SYMBOL_CHANGE_DIRECTORY)) 
+    {
+        parser_parse_argument(instance);
+        parser_expect(instance, SYMBOL_NONE);
 
         return;
     }
 
-    command_text();
+    if (parser_accept(instance, SYMBOL_EXIT) || 
+        parser_accept(instance, SYMBOL_JOBS)) 
+    {
+        parser_expect(instance, SYMBOL_NONE);
 
-    if (accept(SYMBOL_READ)) {
-        file_name();
+        return;
+    }
 
-        if (sym == SYMBOL_PIPE) {
-            recursive();
+    if (parser_accept(instance, SYMBOL_FOREGROUND)) 
+    {
+        parser_parse_argument(instance);
+        parser_expect(instance, SYMBOL_NONE);
+
+        return;
+    }
+
+    parser_parse_command_text(instance);
+
+    if (parser_accept(instance, SYMBOL_READ)) 
+    {
+        parser_parse_file_name(instance);
+
+        if (instance->current == SYMBOL_PIPE) 
+        {
+            parser_parse_recursive(instance);
         }
-        else {
-            terminate();
+        else 
+        {
+            parser_parse_terminate(instance);
         }
 
-        expect(SYMBOL_NONE);
+        parser_expect(instance, SYMBOL_NONE);
 
         return;
     }
 
-    if (sym == SYMBOL_PIPE) {
-        recursive();
-        expect(SYMBOL_NONE);
+    if (instance->current == SYMBOL_PIPE) 
+    {
+        parser_parse_recursive(instance);
+        parser_expect(instance, SYMBOL_NONE);
 
         return;
     }
 
-    terminate();
+    parser_parse_terminate(instance);
 
-    if (accept(SYMBOL_READ)) {
-        file_name();
+    if (parser_accept(instance, SYMBOL_READ))
+    {
+        parser_parse_file_name(instance);
     }
 
-    expect(SYMBOL_NONE);
+    parser_expect(instance, SYMBOL_NONE);
 }

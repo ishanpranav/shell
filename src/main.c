@@ -107,6 +107,7 @@ int main()
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
     struct ArgumentVector args;
+    struct Parser recursiveDescentParser;
 
     euler_ok(string_builder(&line, 0));
     euler_ok(string_builder(&currentDirectory, 0));
@@ -129,11 +130,14 @@ int main()
             continue;
         }
 
-        parser(&args);
-        command();
+        parser(&recursiveDescentParser, &args);
+        parser_parse_command(&recursiveDescentParser);
 
-        if (iserror()) {
+        if (recursiveDescentParser.faulted)
+        {
             fprintf(stderr, "Error: invalid command\n");
+
+            continue;
         }
 
         // HandleResult handleResult;

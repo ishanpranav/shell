@@ -7,7 +7,7 @@
 
 enum Symbol
 {
-    SYMBOL_NONE,
+    SYMBOL_NONE = 0,
     SYMBOL_CHANGE_DIRECTORY,
     SYMBOL_EXIT,
     SYMBOL_FOREGROUND,
@@ -17,7 +17,8 @@ enum Symbol
     SYMBOL_APPEND,
     SYMBOL_PIPE,
     SYMBOL_STRING,
-    SYMBOL_INVALID
+    SYMBOL_INVALID,
+    SYMBOLS
 };
 
 typedef enum Symbol Symbol;

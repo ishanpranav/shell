@@ -5,10 +5,19 @@
 // References:
 //  - https://en.wikipedia.org/wiki/Recursive_descent_parser
 
+#include <stdbool.h>
 #include "argument_vector.h"
+#include "symbol.h"
 
-bool iserror();
+struct Parser
+{
+    bool faulted;
+    enum Symbol current;
+    size_t index;
+    struct ArgumentVector* args;
+};
 
-void parser(ArgumentVector a);
+typedef struct Parser* Parser;
 
-void command();
+void parser(Parser instance, ArgumentVector args);
+void parser_parse_command(Parser instance);
