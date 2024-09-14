@@ -16,7 +16,8 @@ enum Symbol
     SYMBOL_WRITE,
     SYMBOL_APPEND,
     SYMBOL_PIPE,
-    SYMBOL_STRING
+    SYMBOL_STRING,
+    SYMBOL_INVALID
 };
 
 typedef enum Symbol Symbol;

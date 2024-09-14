@@ -132,6 +132,10 @@ int main()
         parser(&args);
         command();
 
+        if (iserror()) {
+            fprintf(stderr, "Error: invalid command\n");
+        }
+
         // HandleResult handleResult;
 
         // for (Handler* handler = SHELL_HANDLERS; *handler; handler++)
