@@ -22,7 +22,18 @@ bool execute_handler(Instruction instruction)
         return true;
     }
 
-    String* arguments = instruction->payload.arguments;
+    // `exec*` is called: no need to `free`
+
+    String* arguments = malloc(instruction->length * sizeof * arguments);
+
+    euler_assert(arguments);
+
+    for (size_t i = 0; i < instruction->length; i++)
+    {
+        arguments[i] = string_clone(instruction->payload.arguments[i]);
+
+        euler_assert(arguments[i]);
+    }
 
     if (strchr(arguments[0], '/'))
     {
@@ -32,14 +43,21 @@ bool execute_handler(Instruction instruction)
     {
         execv(arguments[0], arguments);
 
-        struct StringBuilder path; // `exec*` is called: no need to finalize
+        struct StringBuilder path;
 
         euler_ok(string_builder(&path, 0));
         euler_ok(string_builder_append_string(&path, "/usr/bin/"));
         euler_ok(string_builder_append_string(&path, arguments[0]));
         execv(path.buffer, arguments);
+        finalize_string_builder(&path);
     }
     
+    for (size_t i = 0; i < instruction->length; i++)
+    {
+        free(arguments[i]);
+    }
+    
+    free(arguments);
     fprintf(stderr, "Error: invalid program\n");
 
     return false;

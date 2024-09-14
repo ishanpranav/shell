@@ -183,7 +183,7 @@ static void parser_parse_recursive(Parser instance)
 
     parser_expect(instance, SYMBOL_NONE);
 }
-
+#include <stdio.h>
 static void parser_parse_command(Parser instance)
 {
     if (parser_accept(instance, SYMBOL_NONE)) 
@@ -240,6 +240,9 @@ static void parser_parse_command(Parser instance)
 
     instance->instruction.length = max - min;
     instance->instruction.payload.arguments = instance->args->buffer + min;
+
+        printf("length: %zu\n", max - min);
+        printf("buffer start: %s\n", instance->args->buffer[min]);
 
     if (parser_accept(instance, SYMBOL_READ)) 
     {
