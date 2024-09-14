@@ -22,8 +22,6 @@ bool execute_handler(Instruction instruction)
         return true;
     }
 
-    // `exec*` is called: no need to `free`
-
     String* arguments = malloc(instruction->length * sizeof * arguments);
 
     euler_assert(arguments);

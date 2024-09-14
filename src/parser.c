@@ -24,36 +24,43 @@ String SYMBOL_STRINGS[SYMBOLS] =
     [SYMBOL_INVALID] = NULL
 };
 
+static Instruction parser_create_instruction(Handler handler)
+{
+    Instruction result = calloc(1, sizeof * result);
+
+    result->execute = handler;
+
+    return result;
+}
+
 static void parser_reset(Parser instance)
 {
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
-    instance->instruction.length = 0;
-    instance->instruction.read = NULL;
-    instance->instruction.write = NULL;
-    instance->instruction.append = NULL;
-    instance->instruction.execute = NULL;
+    instance->first = NULL;
 
-    memset(
-        &instance->instruction.payload, 
-        0, 
-        sizeof instance->instruction.payload);
-
-    while (instance->instruction.nextPipe)
+    if (instance->instruction)
     {
-        Instruction next = instance->instruction.nextPipe->nextPipe;
+        while (instance->instruction->nextPipe)
+        {
+            Instruction next = instance->instruction->nextPipe->nextPipe;
 
-        free(instance->instruction.nextPipe);
+            free(instance->instruction->nextPipe);
 
-        instance->instruction.nextPipe = next;
+            instance->instruction->nextPipe = next;
+        }
+
+        free(instance->instruction);
+
+        instance->instruction = NULL;
     }
 }
 
 void parser(Parser instance, ArgumentVector args)
 {
     instance->args = args;
-    instance->instruction.nextPipe = NULL;
+    instance->instruction = NULL;
 
     parser_reset(instance);
 }
@@ -121,13 +128,9 @@ static void parser_expect(Parser instance, Symbol symbol)
     instance->faulted = true;
 }
 
-static size_t parser_parse_argument(Parser instance)
+static void parser_parse_argument(Parser instance)
 {
-    size_t result = instance->index - 1;
-
     parser_expect(instance, SYMBOL_STRING);
-
-    return result;
 }
 
 static void parser_parse_command_name(Parser instance) 
@@ -135,18 +138,25 @@ static void parser_parse_command_name(Parser instance)
     parser_expect(instance, SYMBOL_STRING);
 }
 
-static size_t parser_parse_command_text(Parser instance)
+static void parser_parse_command_text(Parser instance)
 {
-    size_t result = instance->index - 1;
+    size_t offset = instance->index - 1;
+    size_t length = 1;
 
     parser_parse_command_name(instance);
 
     while (instance->current == SYMBOL_STRING) 
     {
-        result = parser_parse_argument(instance);
-    }
+        parser_parse_argument(instance);
 
-    return result;
+        length++;
+    }
+    
+    Instruction instruction = parser_create_instruction(execute_handler);
+
+    instruction->length = length;
+    instruction->payload.arguments = instance->args->buffer + offset;
+    instance->instruction = instruction;
 }
 
 static void parser_parse_file_name(Parser instance)
@@ -159,7 +169,7 @@ static void parser_parse_terminate(Parser instance)
     if (parser_accept(instance, SYMBOL_WRITE) || 
         parser_accept(instance, SYMBOL_APPEND)) 
     {
-        parser_expect(instance, SYMBOL_STRING);
+        parser_parse_file_name(instance);
 
         return;
     }
@@ -183,7 +193,7 @@ static void parser_parse_recursive(Parser instance)
 
     parser_expect(instance, SYMBOL_NONE);
 }
-#include <stdio.h>
+
 static void parser_parse_command(Parser instance)
 {
     if (parser_accept(instance, SYMBOL_NONE)) 
@@ -191,14 +201,16 @@ static void parser_parse_command(Parser instance)
         return;
     }
 
+    Instruction instruction;
+    
     if (parser_accept(instance, SYMBOL_CHANGE_DIRECTORY)) 
     {
-        size_t offset = parser_parse_argument(instance);
-
+        parser_parse_argument(instance);
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.execute = change_directory_handler;
-        instance->instruction.payload.argument = instance->args->buffer[offset];
+        instruction = parser_create_instruction(change_directory_handler);
+        instruction->payload.argument = instance->args->buffer[1];
+        instance->instruction = instruction;
 
         return;
     }
@@ -207,7 +219,7 @@ static void parser_parse_command(Parser instance)
     {
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.execute = exit_handler;
+        instance->instruction = parser_create_instruction(exit_handler);
 
         return;
     }
@@ -216,33 +228,24 @@ static void parser_parse_command(Parser instance)
     {
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.execute = jobs_handler;
+        instance->instruction = parser_create_instruction(jobs_handler);
 
         return;
     }
 
     if (parser_accept(instance, SYMBOL_FOREGROUND)) 
     {
-        size_t offset = parser_parse_argument(instance);
-
+        parser_parse_argument(instance);
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.execute = foreground_handler;
-        instance->instruction.payload.argument = instance->args->buffer[offset];
+        instruction = parser_create_instruction(foreground_handler);
+        instruction->payload.argument = instance->args->buffer[1];
+        instance->instruction = instruction;
 
         return;
     }
 
-    instance->instruction.execute = execute_handler;
-
-    size_t min = instance->index - 1;
-    size_t max =  parser_parse_command_text(instance) + 1;
-
-    instance->instruction.length = max - min;
-    instance->instruction.payload.arguments = instance->args->buffer + min;
-
-        printf("length: %zu\n", max - min);
-        printf("buffer start: %s\n", instance->args->buffer[min]);
+    parser_parse_command_text(instance);
 
     if (parser_accept(instance, SYMBOL_READ)) 
     {

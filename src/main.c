@@ -133,9 +133,9 @@ int main()
             continue;
         }
 
-        Instruction instruction = &recursiveDescentParser.instruction;
+        Instruction instruction = recursiveDescentParser.instruction;
 
-        if (instruction->execute && !instruction->execute(instruction))
+        if (instruction && !instruction->execute(instruction))
         {
             break;
         }

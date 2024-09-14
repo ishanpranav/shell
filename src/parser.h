@@ -16,7 +16,8 @@ struct Parser
     enum Symbol current;
     size_t index;
     struct ArgumentVector* args;
-    struct Instruction instruction;
+    struct Instruction* first;
+    struct Instruction* instruction;
 };
 
 typedef struct Parser* Parser;
