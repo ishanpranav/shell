@@ -25,13 +25,6 @@
 #include "string_builder.h"
 #define SHELL_BUFFER_SIZE 4
 
-// static Handler SHELL_HANDLERS[] = 
-// {
-//     exit_handler,
-//     change_directory_handler,
-//     execute_handler
-// };
-
 Exception environment_current_directory(StringBuilder result)
 {
     while (!getcwd(result->buffer, result->capacity))
@@ -140,32 +133,12 @@ int main()
             continue;
         }
 
-        if (recursiveDescentParser.instruction.type == INSTRUCTION_TYPE_EXIT)
+        Instruction instruction = &recursiveDescentParser.instruction;
+
+        if (instruction->execute && !instruction->execute(instruction))
         {
             break;
         }
-
-        // HandleResult handleResult;
-
-        // for (Handler* handler = SHELL_HANDLERS; *handler; handler++)
-        // {
-        //     handleResult = (*handler)(&args);
-
-        //     if (handleResult)
-        //     {
-        //         break;
-        //     }
-        // }
-
-        // if (handleResult == HANDLE_RESULT_CONTINUE)
-        // {
-        //     continue;
-        // }
-
-        // if (handleResult == HANDLE_RESULT_EXIT)
-        // {
-        //     break;
-        // }
     }
 
     finalize_string_builder(&line);

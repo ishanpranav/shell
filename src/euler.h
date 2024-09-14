@@ -17,6 +17,11 @@
 #define euler_assert(condition) EULER_MACRO if (!(condition)) { \
     fprintf(stderr, "Faulted: %s line %d.\n", __FILE__, __LINE__); \
     exit(1); } EULER_END_MACRO
+#ifdef __GNUC__
+#define EULER_UNUSED __attribute__((unused))
+#else
+#define EULER_UNUSED
+#endif
 
 /** Represents text as a zero-terminated sequence of characters. */
 typedef char* String;

@@ -2,11 +2,12 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+#include <stdbool.h>
 #include "argument_vector.h"
-#include "handle_result.h"
+#include "instruction.h"
 
-typedef HandleResult (*Handler)(ArgumentVector args);
+typedef bool (*Handler)(Instruction instruction);
 
-HandleResult exit_handler(ArgumentVector args);
-HandleResult change_directory_handler(ArgumentVector args);
-HandleResult execute_handler(ArgumentVector args);
+bool exit_handler(Instruction instruction);
+bool change_directory_handler(Instruction instruction);
+bool execute_handler(Instruction instruction);

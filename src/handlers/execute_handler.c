@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "../handler.h"
 
-HandleResult execute_handler(ArgumentVector args)
+bool execute_handler(Instruction instruction)
 {
     pid_t pid = fork();
 
@@ -19,26 +19,28 @@ HandleResult execute_handler(ArgumentVector args)
     {
         waitpid(-1, NULL, 0);
 
-        return HANDLE_RESULT_CONTINUE;
+        return true;
     }
 
-    if (strchr(args->buffer[0], '/'))
+    String* arguments = instruction->payload.arguments;
+
+    if (strchr(arguments[0], '/'))
     {
-        execv(args->buffer[0], args->buffer);
+        execv(arguments[0], arguments);
     }
     else
     {
-        execv(args->buffer[0], args->buffer);
+        execv(arguments[0], arguments);
 
         struct StringBuilder path; // `exec*` is called: no need to finalize
 
         euler_ok(string_builder(&path, 0));
         euler_ok(string_builder_append_string(&path, "/usr/bin/"));
-        euler_ok(string_builder_append_string(&path, args->buffer[0]));
-        execv(path.buffer, args->buffer);
+        euler_ok(string_builder_append_string(&path, arguments[0]));
+        execv(path.buffer, arguments);
     }
     
     fprintf(stderr, "Error: invalid program\n");
 
-    return HANDLE_RESULT_EXIT;
+    return false;
 }

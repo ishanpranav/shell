@@ -2,16 +2,26 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
-#include "instruction_type.h"
+#ifndef INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
+#define INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
+
+union InstructionPayload
+{
+    char* argument;
+    char** arguments;
+};
 
 struct Instruction
 {
-    enum InstructionType type;
     char* read;
     char* write;
     char* append;
-    char** arguments;
+    union InstructionPayload payload;
     struct Instruction* nextPipe;
+
+    bool (*execute)(struct Instruction* instance);
 };
 
 typedef struct Instruction* Instruction;
+
+#endif

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "euler.h"
+#include "handler.h"
 #include "parser.h"
 
 char* INVALID_CHARS = "><*!`'\"|";
@@ -28,11 +29,15 @@ static void parser_reset(Parser instance)
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
-    instance->instruction.type = INSTRUCTION_TYPE_NONE;
+    instance->instruction.execute = NULL;
     instance->instruction.read = NULL;
     instance->instruction.write = NULL;
     instance->instruction.append = NULL;
-    instance->instruction.arguments = NULL;
+
+    memset(
+        &instance->instruction.payload, 
+        0, 
+        sizeof instance->instruction.payload);
 
     while (instance->instruction.nextPipe)
     {
@@ -117,9 +122,11 @@ static bool parser_expect(Parser instance, Symbol symbol)
     return false;
 }
 
-static void parser_parse_argument(Parser instance)
+static String parser_parse_argument(Parser instance)
 {
     parser_expect(instance, SYMBOL_STRING);
+
+    return instance->args->buffer[instance->index - 1];
 }
 
 static void parser_parse_command_name(Parser instance) 
@@ -181,8 +188,12 @@ static void parser_parse_command(Parser instance)
 
     if (parser_accept(instance, SYMBOL_CHANGE_DIRECTORY)) 
     {
-        parser_parse_argument(instance);
+        instance->instruction.payload.argument = 
+            parser_parse_argument(instance);
+
         parser_expect(instance, SYMBOL_NONE);
+
+        instance->instruction.execute = change_directory_handler;
 
         return;
     }
@@ -192,7 +203,7 @@ static void parser_parse_command(Parser instance)
     {
         parser_expect(instance, SYMBOL_NONE);
 
-        instance->instruction.type = INSTRUCTION_TYPE_EXIT;
+        instance->instruction.execute = exit_handler;
 
         return;
     }
@@ -201,6 +212,8 @@ static void parser_parse_command(Parser instance)
     {
         parser_parse_argument(instance);
         parser_expect(instance, SYMBOL_NONE);
+
+        instance->instruction.execute = NULL;
 
         return;
     }
