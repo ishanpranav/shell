@@ -2,9 +2,9 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+#include <stdio.h>
 #include <string.h>
 #include "../handler.h"
-#include "../main.h"
 
 HandleResult exit_handler(ArgumentVector args)
 {
@@ -15,7 +15,7 @@ HandleResult exit_handler(ArgumentVector args)
 
     if (args->count != 1)
     {
-        shell_error_command();
+        fprintf(stderr, "Error: invalid command\n");
 
         return HANDLE_RESULT_CONTINUE;
     }

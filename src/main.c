@@ -11,26 +11,24 @@
 //  - https://www.man7.org/linux/man-pages/man2/signal.2.html
 //  - https://www.man7.org/linux/man-pages/man1/wait.1p.html
 
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include "argument_vector.h"
 #include "euler.h"
 #include "handler.h"
-#include "main.h"
 #include "string_builder.h"
 #define SHELL_BUFFER_SIZE 4
 
 static Handler SHELL_HANDLERS[] = 
 {
     exit_handler,
-    change_directory_handler
+    change_directory_handler,
+    execute_handler
 };
 
 Exception environment_current_directory(StringBuilder result)
@@ -99,25 +97,6 @@ static bool shell_read(StringBuilder result)
     return true;
 }
 
-static HandleResult shell_execute(String args[])
-{
-    pid_t pid = fork();
-
-    euler_assert(pid >= 0);
-
-    if (pid)
-    {
-        waitpid(-1, NULL, 0);
-
-        return HANDLE_RESULT_CONTINUE;
-    }
- 
-    execv(args[0], args);
-    fprintf(stderr, "Error: invalid program\n");
-
-    return HANDLE_RESULT_EXIT;
-}
-
 int main()
 {
     signal(SIGINT, SIG_IGN);
@@ -155,12 +134,7 @@ int main()
         {
             handleResult = (*handler)(&args);
 
-            if (handleResult == HANDLE_RESULT_CONTINUE)
-            {
-                break;
-            }
-
-            if (handleResult == HANDLE_RESULT_EXIT)
+            if (handleResult)
             {
                 break;
             }
@@ -171,7 +145,7 @@ int main()
             continue;
         }
 
-        if (handleResult == HANDLE_RESULT_EXIT || !shell_execute(args.buffer))
+        if (handleResult == HANDLE_RESULT_EXIT)
         {
             break;
         }

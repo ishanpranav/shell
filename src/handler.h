@@ -9,3 +9,4 @@ typedef HandleResult (*Handler)(ArgumentVector args);
 
 HandleResult exit_handler(ArgumentVector args);
 HandleResult change_directory_handler(ArgumentVector args);
+HandleResult execute_handler(ArgumentVector args);

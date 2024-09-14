@@ -2,7 +2,6 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
-#include <stdlib.h>
 #include <string.h>
 #include "argument_vector.h"
 #define ARGUMENT_VECTOR_DELIMITERS " \r\n"

@@ -4,7 +4,6 @@
 
 // https://github.com/ishanpranav/codebook/blob/master/lib/string.c
 
-#include <stdlib.h>
 #include <string.h>
 #include "euler.h"
 

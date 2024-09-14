@@ -7,8 +7,8 @@ CFLAGS=-pedantic -std=c99 -Wall -Wextra
 
 all: nyush
 
-nyush: main.c main.h argument_vector handlers string string_builder
-	$(CC) $(CFLAGS) argument_vector.o change_directory_handler.o exit_handler.o string.o string_builder.o main.c -o nyush
+nyush: main.c argument_vector handlers string string_builder
+	$(CC) $(CFLAGS) argument_vector.o change_directory_handler.o execute_handler.o exit_handler.o string.o string_builder.o main.c -o nyush
 
 handlers: handlers/*.c
 	$(CC) $(CFLAGS) -c handlers/*.c

@@ -2,10 +2,10 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include "../handler.h"
-#include "../main.h"
 
 HandleResult change_directory_handler(ArgumentVector args)
 {
@@ -16,7 +16,7 @@ HandleResult change_directory_handler(ArgumentVector args)
 
     if (args->count != 2)
     {
-        shell_error_command();
+        fprintf(stderr, "Error: invalid command\n");
 
         return HANDLE_RESULT_CONTINUE;
     }

@@ -4,7 +4,7 @@
 
 enum HandleResult
 {
-    HANDLE_RESULT_NONE,
+    HANDLE_RESULT_NONE = 0,
     HANDLE_RESULT_EXIT,
     HANDLE_RESULT_CONTINUE
 };
