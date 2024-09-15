@@ -18,8 +18,8 @@
 #include "euler.h"
 #include "handler.h"
 #include "parser.h"
+#include "shell.h"
 #include "string_builder.h"
-#define SHELL_BUFFER_SIZE 4
 
 Exception environment_current_directory(StringBuilder result)
 {
