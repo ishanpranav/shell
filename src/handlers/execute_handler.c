@@ -20,6 +20,16 @@
 #include <unistd.h>
 #include "../handler.h"
 
+static void execute_handler_finalize_arguments(String values[], size_t count)
+{
+    for (size_t i = 0; i < count; i++)
+    {
+        free(values[i]);
+    }
+
+    free(values);
+}
+
 bool execute_handler(Instruction instruction)
 {
     pid_t pid = fork();
@@ -49,11 +59,48 @@ bool execute_handler(Instruction instruction)
     if (instruction->write)
     {
         int descriptor = creat(instruction->write, S_IRUSR | S_IWUSR);
+
+        euler_assert(descriptor != -1);
+
         int duplicate = dup(descriptor);
 
         euler_assert(duplicate != -1);
         euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
+        euler_assert(close(duplicate) != -1);
+    }
+
+    if (instruction->append)
+    {
+        int descriptor = open(
+            instruction->append, 
+            O_APPEND | O_CREAT | O_WRONLY, 
+            S_IRUSR | S_IWUSR);
+
         euler_assert(descriptor != -1);
+
+        int duplicate = dup(descriptor);
+
+        euler_assert(duplicate != -1);
+        euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
+        euler_assert(close(duplicate) != -1);
+    }
+
+    if (instruction->read)
+    {
+        int descriptor = open(instruction->read, O_RDONLY, S_IRUSR);
+
+        if (descriptor == -1)
+        {
+            execute_handler_finalize_arguments(arguments, instruction->length);
+            fprintf(stderr, "Error: invalid file\n");
+
+            return false;
+        }
+
+        int duplicate = dup(descriptor);
+
+        euler_assert(duplicate != -1);
+        euler_assert(dup2(descriptor, STDIN_FILENO) != -1);
         euler_assert(close(duplicate) != -1);
     }
 
@@ -73,13 +120,8 @@ bool execute_handler(Instruction instruction)
         execv(path.buffer, arguments);
         finalize_string_builder(&path);
     }
-    
-    for (size_t i = 0; i < instruction->length; i++)
-    {
-        free(arguments[i]);
-    }
-    
-    free(arguments);
+
+    execute_handler_finalize_arguments(arguments, instruction->length);
     fprintf(stderr, "Error: invalid program\n");
 
     return false;

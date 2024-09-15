@@ -167,14 +167,24 @@ static void parser_parse_file_name(Parser instance)
 
 static void parser_parse_terminate(Parser instance)
 {
-    if (parser_accept(instance, SYMBOL_WRITE) || 
-        parser_accept(instance, SYMBOL_APPEND)) 
-    {   
+    if (parser_accept(instance, SYMBOL_WRITE)) 
+    {
         parser_parse_file_name(instance);
 
         size_t offset = instance->index - 1;
         
         instance->instruction->write = instance->args->buffer[offset];
+
+        return;
+    }
+    
+    if (parser_accept(instance, SYMBOL_APPEND)) 
+    {   
+        parser_parse_file_name(instance);
+
+        size_t offset = instance->index - 1;
+        
+        instance->instruction->append = instance->args->buffer[offset];
 
         return;
     }
@@ -256,6 +266,10 @@ static void parser_parse_command(Parser instance)
     {
         parser_parse_file_name(instance);
 
+        size_t offset = instance->index - 1;
+
+        instance->instruction->read = instance->args->buffer[offset];
+
         if (instance->current == SYMBOL_PIPE) 
         {
             parser_parse_recursive(instance);
@@ -283,6 +297,10 @@ static void parser_parse_command(Parser instance)
     if (parser_accept(instance, SYMBOL_READ))
     {
         parser_parse_file_name(instance);
+
+        size_t offset = instance->index - 1;
+
+        instance->instruction->read = instance->args->buffer[offset];
     }
 
     parser_expect(instance, SYMBOL_NONE);
