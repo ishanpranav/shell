@@ -32,45 +32,6 @@ static void execute_handler_finalize_arguments(String values[], size_t count)
     free(values);
 }
 
-static void execute_handler_pipe(String arguments[])
-{
-    // int pipeDescriptors[2];
-
-    // euler_assert(pipe(pipeDescriptors) != -1);
-
-    // pid_t pid = fork();
-
-    // euler_assert(pid >= 0);
-
-    // if (pid)
-    // {
-    //     euler_assert(close(pipeDescriptors[0]) != -1);
-
-    //     int duplicate = dup(pipeDescriptors[1]);
-
-    //     euler_assert(duplicate != -1);
-    //     euler_assert(dup2(pipeDescriptors[1], STDOUT_FILENO) != -1);
-    //     euler_assert(close(duplicate) != -1);
-
-    // euler_assert(close(pipeDescriptors[1]) != -1);
-// }
-// else
-// {
-//     euler_assert(close(pipeDescriptors[1]) != -1);
-
-//     char buffer[SHELL_BUFFER_SIZE];
-
-//     while (read(pipeDescriptors[0], buffer, SHELL_BUFFER_SIZE) > 0)
-//     {
-//         write(STDOUT_FILENO, buffer, SHELL_BUFFER_SIZE);
-//     }
-
-//     write(STDOUT_FILENO, "\n", 1);
-
-//     euler_assert(close(pipeDescriptors[0]) != -1);
-// }
-}
-
 static void execute_handler_redirect(int* state, int source, int target)
 {
     *state = dup(target);
@@ -136,7 +97,7 @@ static bool execute_handler_interpret(Instruction instruction)
         if (descriptors[0] == -1)
         {
             execute_handler_finalize_arguments(arguments, instruction->length);
-            fprintf(stderr, "Error: invalid file %s\n", instruction->read);
+            fprintf(stderr, "Error: invalid file\n");
 
             return true;
         }
