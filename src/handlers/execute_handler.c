@@ -6,6 +6,7 @@
 //  - https://www.man7.org/linux/man-pages/man3/exec.3.html
 //  - https://www.man7.org/linux/man-pages/man2/fork.2.html
 //  - https://www.man7.org/linux/man-pages/man2/open.2.html
+//  - https://www.man7.org/linux/man-pages/man2/pipe.2.html
 //  - https://www.man7.org/linux/man-pages/man3/stdin.3.html
 //  - https://www.man7.org/linux/man-pages/man2/wait.2.html
 //  - https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
@@ -102,6 +103,11 @@ bool execute_handler(Instruction instruction)
         euler_assert(duplicate != -1);
         euler_assert(dup2(descriptor, STDIN_FILENO) != -1);
         euler_assert(close(duplicate) != -1);
+    }
+
+    for (Instruction pipe = instruction; pipe; pipe = pipe->nextPipe)
+    {
+        printf("-> '%s'\n", pipe->payload.arguments[0]);
     }
 
     if (strchr(arguments[0], '/'))
