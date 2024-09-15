@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../handler.h"
-#include "../shell.h"
+#include "handler.h"
+#include "shell.h"
 
 static void execute_handler_finalize_arguments(String values[], size_t count)
 {

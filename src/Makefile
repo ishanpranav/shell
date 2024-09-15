@@ -13,8 +13,8 @@ nyush: main.c shell.h argument_vector handlers parser string string_builder
 argument_vector: argument_vector.c argument_vector.h
 	$(CC) $(CFLAGS) -c argument_vector.c
 
-handlers: handlers/*.c handler.h
-	$(CC) $(CFLAGS) -c handlers/*.c
+handlers: *_handler.c handler.h
+	$(CC) $(CFLAGS) -c *_handler.c
 
 parser: parser.c parser.h
 	$(CC) $(CFLAGS) -c parser.c

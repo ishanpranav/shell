@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include "../handler.h"
+#include "handler.h"
 
 bool change_directory_handler(Instruction instruction)
 {
