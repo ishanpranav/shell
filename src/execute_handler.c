@@ -32,33 +32,9 @@ static void execute_handler_finalize_arguments(String values[], size_t count)
     free(values);
 }
 
-static void execute_handler_redirect(int* state, int source, int target)
-{
-    *state = dup(target);
-
-    euler_assert(*state != -1);
-    euler_assert(dup2(source, target) != -1);
-}
-
-static void execute_handler_unredirect(int* state, int source, int target)
-{
-    if (*state == -1)
-    {
-        return;
-    }
-
-    euler_assert(dup2(*state, target) != -1);
-    euler_assert(close(*state) != -1);
-    euler_assert(close(source) != -1);
-    
-    *state = -1;
-}
-
 static bool execute_handler_interpret(Instruction instruction)
 {
-    int inState = -1;
-    int outState = -1;
-    int descriptors[2] = { -1, -1 };
+    // int descriptors[2] = { -1, -1 };
     String* arguments = malloc((instruction->length + 1) * sizeof * arguments);
 
     euler_assert(arguments);
@@ -72,37 +48,13 @@ static bool execute_handler_interpret(Instruction instruction)
 
     arguments[instruction->length] = NULL;
 
-    if (instruction->write)
+    int pipeDescriptors[2];
+
+    if (instruction->nextPipe)
     {
-        descriptors[1] = creat(instruction->write, S_IRUSR | S_IWUSR);
-
-        euler_assert(descriptors[1] != -1);
-        execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
-    }
-    else if (instruction->append)
-    {
-        descriptors[1] = open(
-            instruction->append,
-            O_APPEND | O_CREAT | O_WRONLY,
-            S_IRUSR | S_IWUSR);
-
-        euler_assert(descriptors[1] != -1);
-        execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
-    }
-
-    if (instruction->read)
-    {
-        descriptors[0] = open(instruction->read, O_RDONLY, S_IRUSR);
-
-        if (descriptors[0] == -1)
-        {
-            execute_handler_finalize_arguments(arguments, instruction->length);
-            fprintf(stderr, "Error: invalid file\n");
-
-            return true;
-        }
-
-        execute_handler_redirect(&inState, descriptors[0], STDIN_FILENO);
+        euler_assert(pipe(pipeDescriptors) != -1);
+        euler_assert(pipeDescriptors[0] != -1);
+        euler_assert(pipeDescriptors[1] != -1);
     }
 
     pid_t pid = fork();
@@ -111,48 +63,96 @@ static bool execute_handler_interpret(Instruction instruction)
 
     if (pid)
     {
+        if (instruction->nextPipe)
+        {
+            euler_assert(close(pipeDescriptors[1]) != -1);
+
+            instruction->descriptor = pipeDescriptors[0];
+        }
+
         waitpid(-1, NULL, 0);
-        execute_handler_unredirect(&inState, descriptors[0], STDIN_FILENO);
-        execute_handler_unredirect(&outState, descriptors[1], STDOUT_FILENO);
+        // execute_handler_unredirect(&inState, descriptors[0], STDIN_FILENO);
+        // execute_handler_unredirect(&outState, descriptors[1], STDOUT_FILENO);
         execute_handler_finalize_arguments(arguments, instruction->length);
 
         return true;
     }
 
-    pid_t pipePid = -1;
+    if (instruction->write)
+    {
+        int descriptor = creat(instruction->write, S_IRUSR | S_IWUSR);
+
+        euler_assert(descriptor != -1);
+        euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
+        euler_assert(close(descriptor) != -1);
+    }
+    else if (instruction->append)
+    {
+        int descriptor = open(
+            instruction->append,
+            O_APPEND | O_CREAT | O_WRONLY,
+            S_IRUSR | S_IWUSR);
+
+        euler_assert(descriptor != -1);
+        euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
+        euler_assert(close(descriptor) != -1);
+    }
+
+    if (instruction->read)
+    {
+        int descriptor = open(instruction->read, O_RDONLY, S_IRUSR);
+
+        if (descriptor == -1)
+        {
+            execute_handler_finalize_arguments(arguments, instruction->length);
+            fprintf(stderr, "Error: invalid file\n");
+
+            return true;
+        }
+
+        euler_assert(dup2(descriptor, STDIN_FILENO) != -1);
+        euler_assert(close(descriptor) != -1);
+    }
+
+    // pid_t pipePid = -1;
 
     if (instruction->nextPipe)
     {
-        euler_assert(pipe(descriptors) != -1);
-
-        pipePid = fork();
-
-        euler_assert(pipePid >= 0);
-
-        if (pipePid)
+        if (instruction->descriptor != -1)
         {
-            close(descriptors[0]);
-            execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
+            euler_assert(dup2(instruction->descriptor, STDOUT_FILENO) != -1);
         }
-        else
-        {
-            close(descriptors[1]);
-            execute_handler_redirect(&inState, descriptors[0], STDIN_FILENO);
-            execute_handler_interpret(instruction->nextPipe);
-            execute_handler_unredirect(
-                &inState, 
-                descriptors[0], 
-                STDIN_FILENO);
-            execute_handler_unredirect(
-                &outState, 
-                descriptors[1], 
-                STDIN_FILENO);
-            execute_handler_finalize_arguments(arguments, instruction->length);
 
-            return false;
+        if (instruction->nextPipe->nextPipe)
+        {
+            euler_assert(dup2(pipeDescriptors[1], STDIN_FILENO) != -1);
         }
+
+        euler_assert(close(pipeDescriptors[0]) != -1);
+        // if (pipePid)
+        // {
+        //     close(descriptors[0]);
+        //     execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
+        // }
+        // else
+        // {
+        //     close(descriptors[1]);
+        //     execute_handler_redirect(&inState, descriptors[0], STDIN_FILENO);
+        //     execute_handler_interpret(instruction->nextPipe);
+        //     execute_handler_unredirect(
+        //         &inState, 
+        //         descriptors[0], 
+        //         STDIN_FILENO);
+        //     execute_handler_unredirect(
+        //         &outState, 
+        //         descriptors[1], 
+        //         STDIN_FILENO);
+        //     execute_handler_finalize_arguments(arguments, instruction->length);
+
+        //     return false;
+        // }
     }
-    
+
     if (strchr(arguments[0], '/'))
     {
         execv(arguments[0], arguments);
@@ -171,20 +171,20 @@ static bool execute_handler_interpret(Instruction instruction)
     }
 
     fprintf(stderr, "Error: invalid program\n");
-    
-    if (instruction->nextPipe && pipePid > 0)
-    {
-        wait(NULL);
-    }
 
-    execute_handler_unredirect(
-        &inState, 
-        descriptors[0], 
-        STDIN_FILENO);
-    execute_handler_unredirect(
-        &outState, 
-        descriptors[1], 
-        STDIN_FILENO);
+    // if (instruction->nextPipe && pipePid > 0)
+    // {
+    //     wait(NULL);
+    // }
+
+    // execute_handler_unredirect(
+    //     &inState,
+    //     descriptors[0],
+    //     STDIN_FILENO);
+    // execute_handler_unredirect(
+    //     &outState,
+    //     descriptors[1],
+    //     STDIN_FILENO);
     execute_handler_finalize_arguments(arguments, instruction->length);
 
     return false;
@@ -192,10 +192,15 @@ static bool execute_handler_interpret(Instruction instruction)
 
 bool execute_handler(Instruction instruction)
 {
-    // for (; instruction; instruction = instruction->nextPipe)
-    // {
-    return    execute_handler_interpret(instruction);
-    // }
+    instruction->descriptor = -1;
 
-    // return true;
+    for (; instruction; instruction = instruction->nextPipe)
+    {
+        if (!execute_handler_interpret(instruction))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
