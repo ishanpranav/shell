@@ -7,7 +7,7 @@ CFLAGS=-pedantic -std=c99 -Wall -Wextra
 
 all: nyush
 
-nyush: main.c argument_vector handlers parser string string_builder
+nyush: main.c shell.h argument_vector handlers parser string string_builder
 	$(CC) $(CFLAGS) *.o main.c -o nyush
 
 argument_vector: argument_vector.c argument_vector.h
