@@ -125,7 +125,7 @@ static bool execute_handler_interpret(Instruction instruction)
             O_APPEND | O_CREAT | O_WRONLY,
             S_IRUSR | S_IWUSR);
 
-        euler_assert(descriptors[0] != -1);
+        euler_assert(descriptors[1] != -1);
         execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
     }
 
