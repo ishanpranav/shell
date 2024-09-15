@@ -136,7 +136,7 @@ static bool execute_handler_interpret(Instruction instruction)
         if (descriptors[0] == -1)
         {
             execute_handler_finalize_arguments(arguments, instruction->length);
-            fprintf(stderr, "Error: invalid file\n");
+            fprintf(stderr, "Error: invalid file %s\n", instruction->read);
 
             return true;
         }

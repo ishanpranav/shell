@@ -211,7 +211,7 @@ static void parser_parse_recursive(Parser instance)
 
     parser_expect(instance, SYMBOL_NONE);
 }
-
+#include <stdio.h>
 static void parser_parse_command(Parser instance)
 {
     if (parser_accept(instance, SYMBOL_NONE))
@@ -263,9 +263,9 @@ static void parser_parse_command(Parser instance)
 
     if (parser_accept(instance, SYMBOL_READ))
     {
-        parser_parse_file_name(instance);
-
         size_t offset = instance->index - 1;
+
+        parser_parse_file_name(instance);
 
         instance->last->read = instance->args->buffer[offset];
 
@@ -295,9 +295,9 @@ static void parser_parse_command(Parser instance)
 
     if (parser_accept(instance, SYMBOL_READ))
     {
-        parser_parse_file_name(instance);
-
         size_t offset = instance->index - 1;
+
+        parser_parse_file_name(instance);
 
         instance->last->read = instance->args->buffer[offset];
     }
