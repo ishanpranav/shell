@@ -6,6 +6,7 @@
 //  - https://www.man7.org/linux/man-pages/man3/exec.3.html
 //  - https://www.man7.org/linux/man-pages/man2/fork.2.html
 //  - https://www.man7.org/linux/man-pages/man2/open.2.html
+//  - https://www.man7.org/linux/man-pages/man3/stdin.3.html
 //  - https://www.man7.org/linux/man-pages/man2/wait.2.html
 //  - https://www.gnu.org/software/libc/manual/html_node/Permission-Bits.html
 
@@ -48,9 +49,12 @@ bool execute_handler(Instruction instruction)
     if (instruction->write)
     {
         int descriptor = creat(instruction->write, S_IRUSR | S_IWUSR);
+        int duplicate = dup(descriptor);
 
+        euler_assert(duplicate != -1);
+        euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
         euler_assert(descriptor != -1);
-        euler_assert(close(descriptor) != -1);
+        euler_assert(close(duplicate) != -1);
     }
 
     if (strchr(arguments[0], '/'))
