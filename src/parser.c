@@ -59,7 +59,6 @@ static void parser_reset(Parser instance)
         instance->first = next;
     }
 
-    instance->first = NULL;
     instance->last = NULL;
 }
 
