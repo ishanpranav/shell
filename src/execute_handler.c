@@ -62,14 +62,15 @@ static bool execute_handler_run(Instruction current)
 
     if (pid)
     {
+        execute_handler_finalize_arguments(arguments);
+
         int status;
 
-        execute_handler_finalize_arguments(arguments);
-        waitpid(pid, &status, WUNTRACED);
+        pid = waitpid(pid, &status, WUNTRACED);
 
         if (WIFSTOPPED(status))
         {
-            fprintf(stderr, "STOPPED\n");
+            
         }
 
         return true;
@@ -136,7 +137,7 @@ static bool execute_handler_run(Instruction current)
 
 bool execute_handler(Instruction instruction)
 {
-    if (!instruction->nextPipe) 
+    if (!instruction->nextPipe)
     {
         return execute_handler_run(instruction);
     }
@@ -157,7 +158,7 @@ bool execute_handler(Instruction instruction)
             continue;
         }
 
-        if (p != instruction) 
+        if (p != instruction)
         {
             euler_assert(dup2(p->descriptors[0], STDIN_FILENO) != -1);
         }
@@ -174,10 +175,10 @@ bool execute_handler(Instruction instruction)
 
         return false;
     }
-    
+
     execute_handler_finalize_descriptors(instruction);
 
-    for (Instruction p = instruction; p; p = p->nextPipe) 
+    for (Instruction p = instruction; p; p = p->nextPipe)
     {
         wait(NULL);
     }

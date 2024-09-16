@@ -11,7 +11,10 @@
 enum Exception
 {
     /** There is not enough memory to continue the program. */
-    EXCEPTION_OUT_OF_MEMORY = -1
+    EXCEPTION_OUT_OF_MEMORY = -1,
+
+    /** The value of an argument is outside the allowable range. */
+    EXCEPTION_ARGUMENT_OUT_OF_RANGE = -3
 };
 
 /** Specifies an error that occurs at runtime. */

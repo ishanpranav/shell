@@ -19,11 +19,12 @@
 #include "argument_vector.h"
 #include "euler.h"
 #include "handler.h"
+#include "job_collection.h"
 #include "parser.h"
 #include "shell.h"
 #include "string_builder.h"
 
-Exception environment_current_directory(StringBuilder result)
+Exception environment_get_current_directory(StringBuilder result)
 {
     while (!getcwd(result->buffer, result->capacity))
     {
@@ -51,7 +52,7 @@ Exception environment_current_directory(StringBuilder result)
 
 static void shell_prompt(StringBuilder currentDirectory)
 {
-    euler_ok(environment_current_directory(currentDirectory));
+    euler_ok(environment_get_current_directory(currentDirectory));
 
     printf("[nyush %s]$ ", basename(currentDirectory->buffer));
     fflush(stdout);
@@ -87,11 +88,47 @@ int main()
     struct StringBuilder currentDirectory;
     struct ArgumentVector args;
     struct Parser recursiveDescentParser;
+    JobCollection jobs = job_collection_get_default();
+
+    printf("add jobs\n");
+
+    for (int i = 1; i <= 4; i++) {
+        job_collection_add(jobs, i);
+    }
+
+    for (size_t i = 0; i < jobs->count; i++) {
+        printf("%d", jobs->items[i].value);
+    }
+
+    printf("\nremove third job\n");
+    job_collection_remove_at(jobs, 2);
+    
+    for (size_t i = 0; i < jobs->count; i++) {
+        printf("%d", jobs->items[i].value);
+    }
+
+    printf("\nadd jobs\n");
+
+    for (int i = 1; i <= 10; i++) {
+        job_collection_add(jobs, i + 4);
+    }
+
+    for (size_t i = 0; i < jobs->count; i++) {
+        printf("%d, ", jobs->items[i].value);
+    }
+
+    printf("\nremove ninth job\n");
+    job_collection_remove_at(jobs, 8);
+    
+    for (size_t i = 0; i < jobs->count; i++) {
+        printf("%d, ", jobs->items[i].value);
+    }
+
+    printf("\n");
 
     euler_ok(string_builder(&line, 0));
     euler_ok(string_builder(&currentDirectory, 0));
     euler_ok(argument_vector(&args, 0));
-
     parser(&recursiveDescentParser, &args);
 
     Instruction instruction;
@@ -130,6 +167,7 @@ int main()
     finalize_string_builder(&currentDirectory);
     finalize_argument_vector(&args);
     finalize_parser(&recursiveDescentParser);
+    finalize_job_collection(jobs);
 
     return 0;
 }
