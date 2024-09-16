@@ -3,11 +3,13 @@
 // Licensed under the MIT license.
 
 // References:
+//  - https://www.man7.org/linux/man-pages/man3/basename.3.html
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
 //  - https://www.man7.org/linux/man-pages/man3/getcwd.3.html
 //  - https://www.man7.org/linux/man-pages/man2/signal.2.html
 
 #include <errno.h>
+#include <libgen.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -51,19 +53,7 @@ static void shell_prompt(StringBuilder currentDirectory)
 {
     euler_ok(environment_current_directory(currentDirectory));
 
-    String substring = NULL;
-
-    for (size_t i = currentDirectory->length - 1; i != SIZE_MAX; i--)
-    {
-        if (currentDirectory->buffer[i - 1] == '/')
-        {
-            substring = currentDirectory->buffer + i;
-
-            break;
-        }
-    }
-
-    printf("[nyush %s]$ ", substring);
+    printf("[nyush %s]$ ", basename(currentDirectory->buffer));
     fflush(stdout);
 }
 

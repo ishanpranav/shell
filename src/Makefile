@@ -2,7 +2,7 @@
 # Copyright (c) 2024 Ishan Pranav
 # Licensed under the MIT license.
 
-CC=clang
+CC=gcc
 CFLAGS=-pedantic -std=c99 -Wall -Wextra
 
 all: nyush
