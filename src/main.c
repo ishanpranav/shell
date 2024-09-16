@@ -94,7 +94,9 @@ int main()
 
     parser(&recursiveDescentParser, &args);
 
-    for (;;)
+    Instruction instruction;
+
+    do
     {
         shell_prompt(&currentDirectory);
 
@@ -120,13 +122,9 @@ int main()
             continue;
         }
 
-        Instruction instruction = recursiveDescentParser.first;
-
-        if (instruction && !instruction->execute(instruction))
-        {
-            break;
-        }
+        instruction = recursiveDescentParser.first;
     }
+    while (!instruction || instruction->execute(instruction));
 
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);

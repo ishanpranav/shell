@@ -211,7 +211,7 @@ static void parser_parse_recursive(Parser instance)
 
     parser_expect(instance, SYMBOL_NONE);
 }
-#include <stdio.h>
+
 static void parser_parse_command(Parser instance)
 {
     if (parser_accept(instance, SYMBOL_NONE))

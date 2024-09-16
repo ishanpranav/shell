@@ -2,6 +2,9 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+// References:
+//  - https://www.man7.org/linux/man-pages/man3/strdup.3.html
+
 #include <string.h>
 #include "argument_vector.h"
 #define ARGUMENT_VECTOR_DELIMITERS " \r\n"
@@ -74,7 +77,7 @@ Exception argument_vector_tokenize(ArgumentVector instance, StringBuilder value)
             return ex;
         }
 
-        String clone = string_clone(token);
+        String clone = strdup(token);
 
         if (!clone)
         {

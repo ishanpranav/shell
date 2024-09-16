@@ -3,7 +3,7 @@
 # Licensed under the MIT license.
 
 CC=clang
-CFLAGS=-pedantic -std=c99 -Wall -Wextra
+CFLAGS=-D_XOPEN_SOURCE=500 -pedantic -std=c99 -Wall -Wextra
 
 all: nyush
 

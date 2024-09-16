@@ -26,14 +26,4 @@
 /** Represents text as a zero-terminated sequence of characters. */
 typedef char* String;
 
-/**
- * Creates a new instance of `String` with the same value as a specified
- * `String`.
- *
- * @param instance the `String` instance to copy.
- * @return A new string with the same value, or `NULL` if the process is out of
- *         memory. The caller is responsible.
- */
-String string_clone(String instance);
-
 #endif

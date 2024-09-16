@@ -40,7 +40,7 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
 
     for (size_t i = 0; i < instruction->length; i++)
     {
-        arguments[i] = string_clone(instruction->payload.arguments[i]);
+        arguments[i] = strdup(instruction->payload.arguments[i]);
 
         euler_assert(arguments[i]);
     }
@@ -75,7 +75,7 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
 
         if (WIFSTOPPED(status))
         {
-
+            fprintf(stderr, "STOPPED\n");
         }
         
         execute_handler_finalize_arguments(arguments, instruction->length);
