@@ -69,7 +69,15 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
             instruction->nextPipe->descriptor = pipeDescriptors[0];
         }
 
-        waitpid(-1, NULL, 0);
+        int status;
+
+        waitpid(-1, &status, WUNTRACED);
+
+        if (WIFSTOPPED(status))
+        {
+
+        }
+        
         execute_handler_finalize_arguments(arguments, instruction->length);
 
         return true;
