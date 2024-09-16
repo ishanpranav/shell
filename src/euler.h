@@ -6,6 +6,7 @@
 
 #ifndef EULER_2363b2bd9868485c9651b89fbe7082ba
 #define EULER_2363b2bd9868485c9651b89fbe7082ba
+#include <stdio.h>
 #include <stdlib.h>
 #define EULER_MACRO do {
 #define EULER_END_MACRO } while (0)

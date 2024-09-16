@@ -6,6 +6,7 @@
 #include <string.h>
 #include "euler.h"
 #include "handler.h"
+#include "job_collection.h"
 #include "parser.h"
 
 char* INVALID_CHARS = "><*!`'\"|";
@@ -46,19 +47,20 @@ static Instruction parser_add(Parser instance, Handler handler)
     return result;
 }
 
-static void parser_reset(Parser instance)
+void parser_reset(Parser instance)
 {
     instance->current = SYMBOL_NONE;
     instance->index = 0;
     instance->faulted = false;
 
-    while (instance->first)
+    if (instance->first)
     {
-        Instruction next = instance->first->nextPipe;
+        JobCollection jobs = job_collection_get_default();
 
-        free(instance->first);
+        euler_assert(jobs);
+        job_collection_free_instruction(jobs, instance->first);
 
-        instance->first = next;
+        instance->first = NULL;
     }
 
     instance->last = NULL;
@@ -309,7 +311,6 @@ static void parser_parse_command(Parser instance)
 
 void parser_parse(Parser instance)
 {
-    parser_reset(instance);
     parser_next(instance);
     parser_parse_command(instance);
 }

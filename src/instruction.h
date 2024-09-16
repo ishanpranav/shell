@@ -4,6 +4,8 @@
 
 #ifndef INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
 #define INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
+#include <sys/types.h>
+#include <stddef.h>
 
 union InstructionPayload
 {

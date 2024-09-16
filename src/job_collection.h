@@ -11,6 +11,7 @@ struct JobCollection
     size_t count;
     size_t capacity;
     struct Job* items;
+    struct Instruction* freeList;
 };
 
 typedef struct JobCollection* JobCollection;
@@ -24,4 +25,6 @@ Exception job_collection_ensure_capacity(
 
 Exception job_collection_add(JobCollection instance, int value);
 Exception job_collection_remove_at(JobCollection instance, size_t index);
+void job_collection_free_instruction(JobCollection instance, Instruction item);
+void job_collection_garbage_collect(JobCollection instance);
 void finalize_job_collection(JobCollection instance);

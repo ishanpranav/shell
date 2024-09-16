@@ -13,7 +13,6 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include "argument_vector.h"
@@ -84,47 +83,14 @@ int main()
     signal(SIGQUIT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
 
+    JobCollection jobs = job_collection_get_default();
+
+    euler_assert(jobs);
+
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
     struct ArgumentVector args;
     struct Parser recursiveDescentParser;
-    JobCollection jobs = job_collection_get_default();
-
-    printf("add jobs\n");
-
-    for (int i = 1; i <= 4; i++) {
-        job_collection_add(jobs, i);
-    }
-
-    for (size_t i = 0; i < jobs->count; i++) {
-        printf("%d", jobs->items[i].value);
-    }
-
-    printf("\nremove third job\n");
-    job_collection_remove_at(jobs, 2);
-    
-    for (size_t i = 0; i < jobs->count; i++) {
-        printf("%d", jobs->items[i].value);
-    }
-
-    printf("\nadd jobs\n");
-
-    for (int i = 1; i <= 10; i++) {
-        job_collection_add(jobs, i + 4);
-    }
-
-    for (size_t i = 0; i < jobs->count; i++) {
-        printf("%d, ", jobs->items[i].value);
-    }
-
-    printf("\nremove ninth job\n");
-    job_collection_remove_at(jobs, 8);
-    
-    for (size_t i = 0; i < jobs->count; i++) {
-        printf("%d, ", jobs->items[i].value);
-    }
-
-    printf("\n");
 
     euler_ok(string_builder(&line, 0));
     euler_ok(string_builder(&currentDirectory, 0));
@@ -150,6 +116,8 @@ int main()
             continue;
         }
 
+        parser_reset(&recursiveDescentParser);
+        job_collection_garbage_collect(jobs);
         parser_parse(&recursiveDescentParser);
 
         if (recursiveDescentParser.faulted)

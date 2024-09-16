@@ -28,6 +28,7 @@ Exception job_collection(JobCollection instance, size_t capacity)
 
     instance->count = 0;
     instance->capacity = capacity;
+    instance->freeList = NULL;
 
     return 0;
 }
@@ -91,7 +92,7 @@ Exception job_collection_add(JobCollection instance, int value)
         return ex;
     }
 
-    instance->items[instance->count].value = value;
+    // instance->items[instance->count].value = value;
     instance->count++;
 
     return 0;
@@ -119,11 +120,36 @@ Exception job_collection_remove_at(JobCollection instance, size_t index)
     return 0;
 }
 
+void job_collection_free_instruction(JobCollection instance, Instruction item)
+{
+    if (!instance->freeList)
+    {
+        instance->freeList = item;
+
+        return;
+    }
+
+    instance->freeList->nextPipe = item;
+}
+
+void job_collection_garbage_collect(JobCollection instance)
+{
+    while (instance->freeList)
+    {
+        Instruction next = instance->freeList->nextPipe;
+
+        free(instance->freeList);
+
+        instance->freeList = next;
+    }
+}
+
 void finalize_job_collection(JobCollection instance)
 {
     instance->count = 0;
 
     free(instance->items);
+    job_collection_garbage_collect(instance);
 
     instance->items = NULL;
     instance->capacity = 0;
