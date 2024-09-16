@@ -62,14 +62,11 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
 
     if (pid)
     {
-        if (hasPipe)
+        if (hasPipe && instruction->nextPipe)
         {
-            close(pipeDescriptors[1]);
+            euler_assert(close(pipeDescriptors[1]) != -1);
 
-            if (instruction->nextPipe)
-            {
-                instruction->nextPipe->descriptor = pipeDescriptors[0];
-            }
+            instruction->nextPipe->descriptor = pipeDescriptors[0];
         }
 
         waitpid(-1, NULL, 0);
@@ -121,9 +118,8 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
         if (instruction->nextPipe)
         {
             euler_assert(dup2(pipeDescriptors[1], STDOUT_FILENO) != -1);
+            euler_assert(close(pipeDescriptors[0]) != -1);
         }
-
-        euler_assert(close(pipeDescriptors[0]) != -1);
     }
 
     if (strchr(arguments[0], '/'))
@@ -152,7 +148,7 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
 bool execute_handler(Instruction instruction)
 {
     bool hasPipe = instruction->nextPipe;
-    
+
     for (; instruction; instruction = instruction->nextPipe)
     {
         if (!execute_handler_interpret(instruction, hasPipe))
