@@ -108,7 +108,7 @@ int main()
         argument_vector_clear(&args);
         euler_ok(argument_vector_tokenize(&args, &line));
 
-        if (args.count == 0)
+        if (!args.count)
         {
             continue;
         }

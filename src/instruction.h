@@ -13,7 +13,7 @@ union InstructionPayload
 
 struct Instruction
 {
-    int descriptor;
+    int descriptors[2];
     size_t length;
     char* read;
     char* write;

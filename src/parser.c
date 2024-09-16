@@ -28,6 +28,8 @@ static Instruction parser_add(Parser instance, Handler handler)
 {
     Instruction result = calloc(1, sizeof * result);
 
+    result->descriptors[0] = -1;
+    result->descriptors[1] = -1;
     result->execute = handler;
 
     if (instance->last)
