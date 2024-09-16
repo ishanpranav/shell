@@ -181,18 +181,6 @@ static bool execute_handler_interpret(Instruction first, Instruction current)
     //         euler_assert(close(pipeDescriptors[0]) != -1);
     //     }
     // }
-    
-    if (current->descriptors[0] != -1) 
-    {
-        euler_assert(dup2(current->descriptors[0], STDIN_FILENO) != -1);
-    }
-
-    if (current->nextPipe)
-    {
-        int descriptor = current->nextPipe->descriptors[1];
-
-        euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
-    }
 
     // execute_handler_finalize_descriptors(first);
 
@@ -215,11 +203,33 @@ bool execute_handler(Instruction instruction)
 
     for (Instruction p = instruction; p; p = p->nextPipe)
     {
-        if (!execute_handler_interpret(instruction, p))
+        pid_t pid = fork();
+
+        euler_assert(pid >= 0);
+
+        if (pid)
         {
-            return false;
+            continue;
         }
+
+        if (p != instruction) 
+        {
+            euler_assert(dup2(p->descriptors[0], STDIN_FILENO) != -1);
+        }
+
+        if (p->nextPipe)
+        {
+            int descriptor = p->nextPipe->descriptors[1];
+
+            euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
+        }
+
+        execute_handler_run(p);
+
+        return false;
     }
+    
+    waitpid(-1, NULL, 0);
 
     return true;
 }
