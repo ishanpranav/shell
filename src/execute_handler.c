@@ -68,7 +68,7 @@ static bool execute_handler_run(Instruction current)
 
         if (WIFSTOPPED(status))
         {
-
+            fprintf(stderr, "STOPPED\n");
         }
 
         return true;
@@ -100,7 +100,7 @@ static bool execute_handler_run(Instruction current)
 
         if (descriptor == -1)
         {
-            // execute_handler_finalize_arguments(arguments, current->length);
+            execute_handler_finalize_arguments(arguments);
             fprintf(stderr, "Error: invalid file\n");
 
             return false;
@@ -127,64 +127,8 @@ static bool execute_handler_run(Instruction current)
         finalize_string_builder(&path);
     }
 
-    fprintf(stderr, "Error: invalid program\n");
     execute_handler_finalize_arguments(arguments);
-
-    return false;
-}
-
-static bool execute_handler_interpret(Instruction first, Instruction current)
-{
-    // int pipeDescriptors[2];
-
-    // if (instruction->nextPipe)
-    // {
-    //     euler_assert(pipe(pipeDescriptors) != -1);
-    //     euler_assert(pipeDescriptors[0] != -1);
-    //     euler_assert(pipeDescriptors[1] != -1);
-    // }
-
-    pid_t pid = fork();
-
-    euler_assert(pid >= 0);
-
-    if (pid)
-    {
-        // if (hasPipe && instruction->nextPipe)
-        // {
-        //     euler_assert(close(pipeDescriptors[1]) != -1);
-
-        //     instruction->nextPipe->descriptor = pipeDescriptors[0];
-        // }
-
-        int status;
-
-        waitpid(-1, &status, WUNTRACED);
-
-        if (WIFSTOPPED(status))
-        {
-            fprintf(stderr, "STOPPED\n");
-        }
-        
-        // execute_handler_finalize_arguments(arguments, current->length);
-        execute_handler_finalize_descriptors(first);
-
-        return true;
-    }
-    // if (hasPipe)
-    // {
-    //     euler_assert(dup2(instruction->descriptor, STDIN_FILENO) != -1);
-
-    //     if (instruction->nextPipe)
-    //     {
-    //         euler_assert(dup2(pipeDescriptors[1], STDOUT_FILENO) != -1);
-    //         euler_assert(close(pipeDescriptors[0]) != -1);
-    //     }
-    // }
-
-    // execute_handler_finalize_descriptors(first);
-
-    // execute_handler_finalize_arguments(arguments, current->length);
+    fprintf(stderr, "Error: invalid program\n");
 
     return false;
 }
