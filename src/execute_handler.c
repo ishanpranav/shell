@@ -104,7 +104,7 @@ static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
             execute_handler_finalize_arguments(arguments, instruction->length);
             fprintf(stderr, "Error: invalid file\n");
 
-            return true;
+            return false;
         }
 
         euler_assert(dup2(descriptor, STDIN_FILENO) != -1);
