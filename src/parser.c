@@ -172,9 +172,9 @@ static void parser_parse_terminate(Parser instance)
 {
     if (parser_accept(instance, SYMBOL_WRITE))
     {
-        parser_parse_file_name(instance);
-
         size_t offset = instance->index - 1;
+
+        parser_parse_file_name(instance);
 
         instance->last->write = instance->args->buffer[offset];
 
@@ -183,9 +183,9 @@ static void parser_parse_terminate(Parser instance)
 
     if (parser_accept(instance, SYMBOL_APPEND))
     {
-        parser_parse_file_name(instance);
-
         size_t offset = instance->index - 1;
+        
+        parser_parse_file_name(instance);
 
         instance->last->append = instance->args->buffer[offset];
 
