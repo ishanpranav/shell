@@ -24,7 +24,7 @@
 
 static void execute_handler_finalize_descriptors(Instruction first)
 {
-    for (Instruction p = first; p; p = p->nextPipe)
+    for (Instruction p = first->nextPipe; p; p = p->nextPipe)
     {
         euler_assert(close(p->descriptors[0]) != -1);
         euler_assert(close(p->descriptors[1]) != -1);
@@ -224,12 +224,20 @@ bool execute_handler(Instruction instruction)
             euler_assert(dup2(descriptor, STDOUT_FILENO) != -1);
         }
 
+        execute_handler_finalize_descriptors(instruction);
         execute_handler_run(p);
 
         return false;
     }
     
-    waitpid(-1, NULL, 0);
+    execute_handler_finalize_descriptors(instruction);
+    
+    int status;
+
+    for (Instruction p = instruction; p; p = p->nextPipe) 
+    {
+        wait(&status);
+    }
 
     return true;
 }
