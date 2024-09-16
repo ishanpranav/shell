@@ -32,9 +32,8 @@ static void execute_handler_finalize_arguments(String values[], size_t count)
     free(values);
 }
 
-static bool execute_handler_interpret(Instruction instruction)
+static bool execute_handler_interpret(Instruction instruction, bool hasPipe)
 {
-    // int descriptors[2] = { -1, -1 };
     String* arguments = malloc((instruction->length + 1) * sizeof * arguments);
 
     euler_assert(arguments);
@@ -63,16 +62,17 @@ static bool execute_handler_interpret(Instruction instruction)
 
     if (pid)
     {
-        if (instruction->nextPipe)
+        if (hasPipe)
         {
-            euler_assert(close(pipeDescriptors[1]) != -1);
+            close(pipeDescriptors[1]);
 
-            instruction->descriptor = pipeDescriptors[0];
+            if (instruction->nextPipe)
+            {
+                instruction->nextPipe->descriptor = pipeDescriptors[0];
+            }
         }
 
         waitpid(-1, NULL, 0);
-        // execute_handler_unredirect(&inState, descriptors[0], STDIN_FILENO);
-        // execute_handler_unredirect(&outState, descriptors[1], STDOUT_FILENO);
         execute_handler_finalize_arguments(arguments, instruction->length);
 
         return true;
@@ -114,43 +114,16 @@ static bool execute_handler_interpret(Instruction instruction)
         euler_assert(close(descriptor) != -1);
     }
 
-    // pid_t pipePid = -1;
-
-    if (instruction->nextPipe)
+    if (hasPipe)
     {
-        if (instruction->descriptor != -1)
-        {
-            euler_assert(dup2(instruction->descriptor, STDOUT_FILENO) != -1);
-        }
+        euler_assert(dup2(instruction->descriptor, STDIN_FILENO) != -1);
 
-        if (instruction->nextPipe->nextPipe)
+        if (instruction->nextPipe)
         {
-            euler_assert(dup2(pipeDescriptors[1], STDIN_FILENO) != -1);
+            euler_assert(dup2(pipeDescriptors[1], STDOUT_FILENO) != -1);
         }
 
         euler_assert(close(pipeDescriptors[0]) != -1);
-        // if (pipePid)
-        // {
-        //     close(descriptors[0]);
-        //     execute_handler_redirect(&outState, descriptors[1], STDOUT_FILENO);
-        // }
-        // else
-        // {
-        //     close(descriptors[1]);
-        //     execute_handler_redirect(&inState, descriptors[0], STDIN_FILENO);
-        //     execute_handler_interpret(instruction->nextPipe);
-        //     execute_handler_unredirect(
-        //         &inState, 
-        //         descriptors[0], 
-        //         STDIN_FILENO);
-        //     execute_handler_unredirect(
-        //         &outState, 
-        //         descriptors[1], 
-        //         STDIN_FILENO);
-        //     execute_handler_finalize_arguments(arguments, instruction->length);
-
-        //     return false;
-        // }
     }
 
     if (strchr(arguments[0], '/'))
@@ -171,20 +144,6 @@ static bool execute_handler_interpret(Instruction instruction)
     }
 
     fprintf(stderr, "Error: invalid program\n");
-
-    // if (instruction->nextPipe && pipePid > 0)
-    // {
-    //     wait(NULL);
-    // }
-
-    // execute_handler_unredirect(
-    //     &inState,
-    //     descriptors[0],
-    //     STDIN_FILENO);
-    // execute_handler_unredirect(
-    //     &outState,
-    //     descriptors[1],
-    //     STDIN_FILENO);
     execute_handler_finalize_arguments(arguments, instruction->length);
 
     return false;
@@ -192,11 +151,11 @@ static bool execute_handler_interpret(Instruction instruction)
 
 bool execute_handler(Instruction instruction)
 {
-    instruction->descriptor = -1;
-
+    bool hasPipe = instruction->nextPipe;
+    
     for (; instruction; instruction = instruction->nextPipe)
     {
-        if (!execute_handler_interpret(instruction))
+        if (!execute_handler_interpret(instruction, hasPipe))
         {
             return false;
         }
