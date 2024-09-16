@@ -97,6 +97,8 @@ int main()
     euler_ok(argument_vector(&args, 0));
     parser(&recursiveDescentParser, &args);
 
+    jobs->aliasReference = &recursiveDescentParser.first;
+
     Instruction instruction;
 
     do

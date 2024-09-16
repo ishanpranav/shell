@@ -29,6 +29,7 @@ Exception job_collection(JobCollection instance, size_t capacity)
     instance->count = 0;
     instance->capacity = capacity;
     instance->freeList = NULL;
+    instance->aliasReference = NULL;
 
     return 0;
 }
@@ -81,7 +82,10 @@ Exception job_collection_ensure_capacity(
     return 0;
 }
 
-Exception job_collection_add(JobCollection instance, int value)
+Exception job_collection_add(
+    JobCollection instance, 
+    pid_t pid, 
+    Instruction item)
 {
     Exception ex = job_collection_ensure_capacity(
         instance, 
@@ -92,7 +96,16 @@ Exception job_collection_add(JobCollection instance, int value)
         return ex;
     }
 
-    // instance->items[instance->count].value = value;
+    if (instance->aliasReference)
+    {
+        if (*instance->aliasReference == item)
+        {
+            *instance->aliasReference = NULL;
+        }
+    }
+
+    instance->items[instance->count].pid = pid;
+    instance->items[instance->count].first = item;
     instance->count++;
 
     return 0;

@@ -20,6 +20,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "handler.h"
+#include "job_collection.h"
 #include "shell.h"
 
 static void execute_handler_finalize_descriptors(Instruction first)
@@ -41,7 +42,7 @@ static void execute_handler_finalize_arguments(String values[])
     free(values);
 }
 
-static bool execute_handler_run(Instruction current)
+static bool execute_handler_run(Instruction first, Instruction current)
 {
     String* arguments = malloc((current->length + 1) * sizeof * arguments);
 
@@ -70,7 +71,10 @@ static bool execute_handler_run(Instruction current)
 
         if (WIFSTOPPED(status))
         {
-            
+            JobCollection jobs = job_collection_get_default();
+
+            euler_assert(jobs);
+            job_collection_add(jobs, pid, first);
         }
 
         return true;
@@ -139,7 +143,7 @@ bool execute_handler(Instruction instruction)
 {
     if (!instruction->nextPipe)
     {
-        return execute_handler_run(instruction);
+        return execute_handler_run(instruction, instruction);
     }
 
     for (Instruction p = instruction->nextPipe; p; p = p->nextPipe)
@@ -171,7 +175,7 @@ bool execute_handler(Instruction instruction)
         }
 
         execute_handler_finalize_descriptors(instruction);
-        execute_handler_run(p);
+        execute_handler_run(instruction, p);
 
         return false;
     }
