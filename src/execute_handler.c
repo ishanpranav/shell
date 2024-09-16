@@ -64,6 +64,7 @@ static bool execute_handler_run(Instruction current)
     {
         int status;
 
+        execute_handler_finalize_arguments(arguments);
         waitpid(pid, &status, WUNTRACED);
 
         if (WIFSTOPPED(status))
@@ -175,12 +176,10 @@ bool execute_handler(Instruction instruction)
     }
     
     execute_handler_finalize_descriptors(instruction);
-    
-    int status;
 
     for (Instruction p = instruction; p; p = p->nextPipe) 
     {
-        wait(&status);
+        wait(NULL);
     }
 
     return true;
