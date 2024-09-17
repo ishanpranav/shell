@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "euler.h"
-#include "instruction.h"
+#include "job_collection.h"
 
 Exception job_collection(JobCollection instance, size_t capacity)
 {
@@ -77,13 +77,9 @@ Exception job_collection_add(
         return ex;
     }
 
-    ex = job(instance->items + instance->count, pid, first);
-
-    if (ex)
-    {
-        return ex;
-    }
-
+    instance->items[instance->count].pid = pid;
+    instance->items[instance->count].first = first;
+    
     if (instance->aliasReference)
     {
         if (*instance->aliasReference == first)
@@ -105,8 +101,6 @@ Exception job_collection_remove_at(JobCollection instance, size_t index)
     }
 
     instance->count--;
-
-    finalize_job(instance->items + index);
 
     if (index == instance->count)
     {
@@ -139,6 +133,7 @@ void job_collection_garbage_collect(JobCollection instance)
     {
         Instruction next = instance->freeList->nextPipe;
 
+        free(instance->freeList->text);
         free(instance->freeList);
 
         instance->freeList = next;
@@ -148,11 +143,6 @@ void job_collection_garbage_collect(JobCollection instance)
 void finalize_job_collection(JobCollection instance)
 {
     instance->count = 0;
-
-    for (size_t i = 0; i < instance->count; i++)
-    {
-        finalize_job(instance->items + i);
-    }
 
     free(instance->items);
     job_collection_garbage_collect(instance);

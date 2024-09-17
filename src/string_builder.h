@@ -54,6 +54,15 @@ Exception string_builder_ensure_capacity(
 Exception string_builder_append_string(StringBuilder instance, String value);
 
 /**
+ * Converts the value of an `StringBuilder` to a new `String`.
+ * 
+ * @param instance the `StringBuilder` instance.
+ * @return A new string whose value is the same as this instance. The caller is
+ *         responsible.
+*/
+String string_builder_to_string(StringBuilder instance);
+
+/**
  * Frees all resources.
  * 
  * @param instance the `StringBuilder` instance. This method corrupts the

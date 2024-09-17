@@ -1,9 +1,9 @@
-// instruction.h
+// job_collection.h
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
-#ifndef INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
-#define INSTRUCTION_1cb8a579912440e2b04aa4d31f016ed4
+#ifndef JOB_COLLECTION_1cb8a579912440e2b04aa4d31f016ed4
+#define JOB_COLLECTION_1cb8a579912440e2b04aa4d31f016ed4
 #include <sys/types.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -23,6 +23,7 @@ struct Instruction
 {
     int descriptors[2];
     size_t length;
+    char* text;
     char* read;
     char* write;
     char* append;
@@ -35,7 +36,6 @@ struct Instruction
 struct Job
 {
     pid_t pid;
-    struct StringBuilder text;
     struct Instruction* first;
 };
 

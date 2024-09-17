@@ -82,6 +82,22 @@ Exception string_builder_append_string(StringBuilder instance, String value)
     return 0;
 }
 
+String string_builder_to_string(StringBuilder instance)
+{
+    String result = malloc((instance->length + 1) * sizeof * result);
+
+    if (!result)
+    {
+        return NULL;
+    }
+
+    memcpy(result, instance->buffer, instance->length);
+
+    result[instance->length] = '\0';
+
+    return result;
+}
+
 void finalize_string_builder(StringBuilder instance)
 {
     free(instance->buffer);

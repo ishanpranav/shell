@@ -41,6 +41,7 @@ static Instruction parser_add(Parser instance, Handler handler)
     {
         instance->first = result;
         instance->last = result;
+        result->text = instance->text;
     }
 
     return result;
@@ -62,7 +63,7 @@ static void parser_reset(Parser instance)
     instance->last = NULL;
 }
 
-Exception parser(Parser instance, ArgumentVector args)
+Exception parser(Parser instance)
 {
     Exception ex = job_collection(&instance->jobs, 0);
 
@@ -71,9 +72,16 @@ Exception parser(Parser instance, ArgumentVector args)
         return ex;
     }
 
-    instance->args = args;
+    ex = argument_vector(&instance->args, 0);
+
+    if (ex)
+    {
+        return ex;
+    }
+
     instance->first = NULL;
     instance->jobs.aliasReference = &instance->first;
+    instance->text = NULL;
 
     parser_reset(instance);
 
@@ -108,16 +116,16 @@ static Symbol parser_classify_token(String value)
 
 static void parser_next(Parser instance)
 {
-    ArgumentVector args = instance->args;
-
-    if (instance->index >= args->count)
+    if (instance->index >= instance->args.count)
     {
         instance->current = SYMBOL_NONE;
 
         return;
     }
 
-    instance->current = parser_classify_token(args->buffer[instance->index]);
+    String token = instance->args.buffer[instance->index];
+
+    instance->current = parser_classify_token(token);
     instance->index++;
 }
 
@@ -170,7 +178,7 @@ static void parser_parse_command_text(Parser instance)
     Instruction added = parser_add(instance, execute_handler);
 
     added->length = length;
-    added->payload.arguments = instance->args->buffer + offset;
+    added->payload.arguments = instance->args.buffer + offset;
 }
 
 static void parser_parse_file_name(Parser instance)
@@ -186,7 +194,7 @@ static void parser_parse_terminate(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->write = instance->args->buffer[offset];
+        instance->last->write = instance->args.buffer[offset];
 
         return;
     }
@@ -197,7 +205,7 @@ static void parser_parse_terminate(Parser instance)
         
         parser_parse_file_name(instance);
 
-        instance->last->append = instance->args->buffer[offset];
+        instance->last->append = instance->args.buffer[offset];
 
         return;
     }
@@ -236,7 +244,7 @@ static void parser_parse_command(Parser instance)
 
         Instruction added = parser_add(instance, change_directory_handler);
 
-        added->payload.argument = instance->args->buffer[1];
+        added->payload.argument = instance->args.buffer[1];
 
         return;
     }
@@ -264,7 +272,7 @@ static void parser_parse_command(Parser instance)
         
         Instruction added = parser_add(instance, foreground_handler);
 
-        added->payload.argument = instance->args->buffer[1];
+        added->payload.argument = instance->args.buffer[1];
 
         return;
     }
@@ -277,7 +285,7 @@ static void parser_parse_command(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->read = instance->args->buffer[offset];
+        instance->last->read = instance->args.buffer[offset];
 
         if (instance->current == SYMBOL_PIPE)
         {
@@ -309,22 +317,48 @@ static void parser_parse_command(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->read = instance->args->buffer[offset];
+        instance->last->read = instance->args.buffer[offset];
     }
 
     parser_expect(instance, SYMBOL_NONE);
 }
 
-void parser_parse(Parser instance)
+Exception parser_parse(Parser instance, StringBuilder value)
 {
+    argument_vector_clear(&instance->args);
+    
+    String text = string_builder_to_string(value);
+
+    if (!text)
+    {
+        return EXCEPTION_OUT_OF_MEMORY;
+    }
+
+    Exception ex = argument_vector_tokenize(&instance->args, value);
+
+    if (ex)
+    {
+        return ex;
+    }
+
+    instance->text = text;
+
+    if (!instance->args.count)
+    {
+        return 0;
+    }
+
     parser_reset(instance);
     job_collection_garbage_collect(&instance->jobs);
     parser_next(instance);
     parser_parse_command(instance);
+
+    return 0;
 }
 
 void finalize_parser(Parser instance)
 {
     parser_reset(instance);
     finalize_job_collection(&instance->jobs);
+    finalize_argument_vector(&instance->args);
 }

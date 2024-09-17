@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 #include "argument_vector.h"
-#include "instruction.h"
+#include "job_collection.h"
 
 typedef bool (*Handler)(JobCollection jobs, Instruction instruction);
 

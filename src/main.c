@@ -82,15 +82,13 @@ int main()
     signal(SIGQUIT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
 
+    struct Parser state;
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
-    struct ArgumentVector args;
-    struct Parser state;
 
+    euler_ok(parser(&state));
     euler_ok(string_builder(&line, 0));
     euler_ok(string_builder(&currentDirectory, 0));
-    euler_ok(argument_vector(&args, 0));
-    euler_ok(parser(&state, &args));
 
     Instruction instruction;
 
@@ -103,15 +101,7 @@ int main()
             break;
         }
 
-        argument_vector_clear(&args);
-        euler_ok(argument_vector_tokenize(&args, &line));
-
-        if (!args.count)
-        {
-            continue;
-        }
-
-        parser_parse(&state);
+        parser_parse(&state, &line);
 
         if (state.faulted)
         {
@@ -126,7 +116,6 @@ int main()
 
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
-    finalize_argument_vector(&args);
     finalize_parser(&state);
 
     return 0;

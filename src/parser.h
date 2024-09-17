@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 #include "argument_vector.h"
-#include "instruction.h"
+#include "job_collection.h"
 #include "symbol.h"
 
 struct Parser
@@ -16,13 +16,14 @@ struct Parser
     enum Symbol current;
     size_t index;
     struct JobCollection jobs;
-    struct ArgumentVector* args;
+    struct ArgumentVector args;
+    char* text;
     struct Instruction* first;
     struct Instruction* last;
 };
 
 typedef struct Parser* Parser;
 
-Exception parser(Parser instance, ArgumentVector args);
-void parser_parse(Parser instance);
+Exception parser(Parser instance);
+Exception parser_parse(Parser instance, StringBuilder value);
 void finalize_parser(Parser instance);
