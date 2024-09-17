@@ -4,6 +4,7 @@
 
 // https://github.com/ishanpranav/codebook/blob/master/lib/list.c
 
+#include <sys/wait.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,6 +112,28 @@ Exception job_collection_remove_at(JobCollection instance, size_t index)
         instance->items + index, 
         instance->items + index + 1, 
         (instance->count - index) * sizeof * instance->items);
+
+    return 0;
+}
+
+Exception job_collection_await(
+    JobCollection instance, 
+    pid_t pid,
+    Instruction first)
+{
+    int status;
+    
+    pid = waitpid(pid, &status, WUNTRACED);
+
+    if (WIFSTOPPED(status))
+    {
+        Exception ex = job_collection_add(instance, pid, first);
+
+        if (ex)
+        {
+            return ex;
+        }
+    }
 
     return 0;
 }

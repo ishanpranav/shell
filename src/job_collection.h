@@ -66,6 +66,12 @@ Exception job_collection_add(
     Instruction first);
 
 Exception job_collection_remove_at(JobCollection instance, size_t index);
+
+Exception job_collection_await(
+    JobCollection instance, 
+    pid_t pid, 
+    Instruction first);
+
 void job_collection_free_instruction(JobCollection instance, Instruction value);
 void job_collection_garbage_collect(JobCollection instance);
 void finalize_job_collection(JobCollection instance);

@@ -30,6 +30,8 @@ String environment_get_current_directory()
         return NULL;
     }
 
+    errno = 0;
+    
     while (!getcwd(buffer, capacity))
     {
         if (errno != ERANGE)
