@@ -51,30 +51,6 @@ String environment_get_current_directory()
     return buffer;
 }
 
-// static void shell_prompt()
-// {
-// }
-
-// static bool shell_read(StringBuilder result)
-// {
-//     char buffer[SHELL_BUFFER_SIZE];
-
-//     do
-//     {
-//         char* p = fgets(buffer, SHELL_BUFFER_SIZE, stdin);
-
-//         euler_ok(string_builder_append_string(result, buffer));
-
-//         if (!p)
-//         {
-//             return false;
-//         }
-//     } 
-//     while (result->buffer[result->length - 1] != '\n');
-
-//     return true;
-// }
-
 int main()
 {
     signal(SIGINT, SIG_IGN);
@@ -82,13 +58,9 @@ int main()
     signal(SIGTSTP, SIG_IGN);
 
     struct Parser state;
-    // struct StringBuilder line;
-    // struct StringBuilder currentDirectory;
 
     euler_ok(parser(&state));
-    // euler_ok(string_builder(&line, 0));
-    // euler_ok(string_builder(&currentDirectory, 0));
-
+    
     Instruction instruction;
 
     do
@@ -107,7 +79,6 @@ int main()
         if (read == -1)
         {    
             free(line);
-            // finalize_string_builder(&currentDirectory);
             finalize_parser(&state);
 
             return 0;
@@ -126,6 +97,4 @@ int main()
         instruction = state.first;
     } 
     while (!instruction || instruction->execute(&state.jobs, instruction));
-
-    // finalize_string_builder(&line);
 }
