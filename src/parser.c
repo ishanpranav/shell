@@ -2,6 +2,7 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT license.
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 #include "euler.h"
@@ -149,6 +150,13 @@ static void parser_expect(Parser instance, Symbol symbol)
     }
 
     instance->faulted = true;
+    
+    if (instance->first)
+    {
+        job_collection_free_instruction(&instance->jobs, instance->first);
+
+        instance->first = NULL;
+    }
 }
 
 static void parser_parse_argument(Parser instance)
@@ -327,6 +335,11 @@ Exception parser_parse(Parser instance, String value, size_t length)
 {
     argument_vector_clear(&instance->arguments);
     
+    while (isspace(value[length - 1]))
+    {
+        length--;
+    }
+
     String duplicate = malloc(length + 1);
 
     if (!duplicate)
@@ -334,14 +347,16 @@ Exception parser_parse(Parser instance, String value, size_t length)
         return EXCEPTION_OUT_OF_MEMORY;
     }
 
+    memcpy(duplicate, value, length);
+
+    value[length] = '\0';
+    
     Exception ex = argument_vector_tokenize(&instance->arguments, value);
 
     if (ex)
     {
         return ex;
     }
-
-    memcpy(duplicate, value, length + 1);
 
     instance->text = duplicate;
 

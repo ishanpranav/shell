@@ -30,7 +30,6 @@ int main()
 
     euler_ok(parser(&state));
 
-    Instruction instruction;
     size_t lineCapacity = 4;
     String line = malloc(lineCapacity);
     
@@ -41,7 +40,7 @@ int main()
 
     euler_assert(currentDirectory);
 
-    do
+    for (;;)
     {
         errno = 0;
         
@@ -68,19 +67,20 @@ int main()
         }
 
         parser_parse(&state, line, length);
-        
+
+
         if (state.faulted)
         {
-            instruction = NULL;
-            
             fprintf(stderr, "Error: invalid command\n");
 
             continue;
         }
-
-        instruction = state.first;
-    } 
-    while (!instruction || instruction->execute(&state.jobs, instruction));
+        
+        if (state.first && !state.first->execute(&state.jobs, state.first))
+        {
+            break;
+        }
+    }
 
     free(line);
     free(currentDirectory);
