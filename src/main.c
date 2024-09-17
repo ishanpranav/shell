@@ -20,37 +20,6 @@
 #include "handler.h"
 #include "parser.h"
 
-String environment_get_current_directory()
-{
-    size_t capacity = 4;
-    String buffer = malloc(capacity);
-
-    if (!buffer)
-    {
-        return NULL;
-    }
-
-    errno = 0;
-    
-    while (!getcwd(buffer, capacity))
-    {
-        if (errno != ERANGE)
-        {
-            return NULL;
-        }
-
-        capacity *= 2;
-        buffer = realloc(buffer, capacity);
-
-        if (!buffer)
-        {
-            return NULL;
-        }
-    }
-
-    return buffer;
-}
-
 int main()
 {
     signal(SIGINT, SIG_IGN);
@@ -62,32 +31,48 @@ int main()
     euler_ok(parser(&state));
 
     Instruction instruction;
+    size_t lineCapacity = 4;
+    String line = malloc(lineCapacity);
+    
+    euler_assert(line);
+
+    size_t currentDirectoryCapacity = 4;
+    String currentDirectory = malloc(currentDirectoryCapacity);
+
+    euler_assert(currentDirectory);
 
     do
     {
-        String currentDirectory = environment_get_current_directory();
+        errno = 0;
+        
+        while (!getcwd(currentDirectory, currentDirectoryCapacity))
+        {
+            euler_assert(errno == ERANGE);
 
-        euler_assert(currentDirectory);
+            currentDirectoryCapacity *= 2;
+            currentDirectory = realloc(
+                currentDirectory, 
+                currentDirectoryCapacity);
+
+            euler_assert(currentDirectory);
+        }
+
         printf("[nyush %s]$ ", basename(currentDirectory));
-        free(currentDirectory);
         fflush(stdout);
 
-        String line = NULL;
-        size_t length = 0;
-        ssize_t read = getline(&line, &length, stdin);
+        ssize_t length = getline(&line, &lineCapacity, stdin);
 
-        if (read == -1)
+        if (length == -1)
         {
-            free(line);
-
             break;
         }
 
-        parser_parse(&state, line, read);
-        free(line);
-
+        parser_parse(&state, line, length);
+        
         if (state.faulted)
         {
+            instruction = NULL;
+            
             fprintf(stderr, "Error: invalid command\n");
 
             continue;
@@ -97,5 +82,7 @@ int main()
     } 
     while (!instruction || instruction->execute(&state.jobs, instruction));
 
+    free(line);
+    free(currentDirectory);
     finalize_parser(&state);
 }

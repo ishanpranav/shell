@@ -156,7 +156,13 @@ void job_collection_garbage_collect(JobCollection instance)
     {
         Instruction next = instance->freeList->nextPipe;
 
-        free(instance->freeList->text);
+        if (instance->freeList->text)
+        {
+            free(instance->freeList->text);
+        
+            instance->freeList->text = NULL;
+        }
+
         free(instance->freeList);
 
         instance->freeList = next;
