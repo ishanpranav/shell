@@ -67,7 +67,15 @@ static bool execute_handler_run(
     if (pid)
     {
         execute_handler_finalize_arguments(arguments);
-        euler_ok(job_collection_await(jobs, pid, first));
+            
+        int status;
+        
+        pid = waitpid(pid, &status, WUNTRACED);
+
+        if (WIFSTOPPED(status))
+        {
+            euler_ok(job_collection_add(jobs, pid, first));
+        }
 
         return true;
     }

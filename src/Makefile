@@ -2,6 +2,13 @@
 # Copyright (c) 2024 Ishan Pranav
 # Licensed under the MIT license.
 
+# References:
+#  - https://www.man7.org/linux/man-pages/man3/getline.3.html
+#  - https://www.man7.org/linux/man-pages/man3/strdup.3.html
+
+# getline in <stdio.h>: _POSIX_C_SOURCE >= 200809L
+# strdup in <string.h>: _XOPEN_SOURCE >= 500
+
 CC=clang
 CFLAGS=-D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L -pedantic -std=c99 -Wall -Wextra
 

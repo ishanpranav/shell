@@ -23,12 +23,24 @@ bool foreground_handler(JobCollection jobs, Instruction instruction)
         return true;
     }
     
-    struct Job item = jobs->items[job];
+    struct Job item = jobs->items[job - 1];
 
     euler_ok(job_collection_remove_at(jobs, job - 1));
 
     kill(item.pid, SIGCONT);
-    euler_ok(job_collection_await(jobs, item.pid, item.first));
+
+    int status;
+    
+    item.pid = waitpid(item.pid, &status, WUNTRACED);
+
+    if (WIFSTOPPED(status))
+    {
+        euler_ok(job_collection_add(jobs, item.pid, item.first));
+    }
+    else
+    {
+        job_collection_free_instruction(jobs, item.first);
+    }
 
     return true;
 }

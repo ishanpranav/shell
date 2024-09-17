@@ -349,7 +349,7 @@ Exception parser_parse(Parser instance, String value, size_t length)
 
     memcpy(duplicate, value, length);
 
-    value[length] = '\0';
+    duplicate[length] = '\0';
     
     Exception ex = argument_vector_tokenize(&instance->arguments, value);
 
