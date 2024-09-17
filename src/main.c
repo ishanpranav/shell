@@ -47,7 +47,7 @@ String environment_get_current_directory()
             return NULL;
         }
     }
-    
+
     return buffer;
 }
 
@@ -60,7 +60,7 @@ int main()
     struct Parser state;
 
     euler_ok(parser(&state));
-    
+
     Instruction instruction;
 
     do
@@ -71,19 +71,18 @@ int main()
         printf("[nyush %s]$ ", basename(currentDirectory));
         free(currentDirectory);
         fflush(stdout);
-        
+
         String line = NULL;
         size_t length = 0;
         ssize_t read = getline(&line, &length, stdin);
 
         if (read == -1)
-        {    
+        {
             free(line);
-            finalize_parser(&state);
 
-            return 0;
+            break;
         }
-        
+
         parser_parse(&state, line, read);
         free(line);
 
@@ -97,4 +96,6 @@ int main()
         instruction = state.first;
     } 
     while (!instruction || instruction->execute(&state.jobs, instruction));
+
+    finalize_parser(&state);
 }
