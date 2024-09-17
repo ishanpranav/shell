@@ -62,11 +62,11 @@ Exception argument_vector_ensure_capacity(
     return 0;
 }
 
-Exception argument_vector_tokenize(ArgumentVector instance, StringBuilder value)
+Exception argument_vector_tokenize(ArgumentVector instance, String value)
 {
     size_t count = instance->count;
 
-    for (String token = strtok(value->buffer, ARGUMENT_VECTOR_DELIMITERS);
+    for (String token = strtok(value, ARGUMENT_VECTOR_DELIMITERS);
         token;
         token = strtok(NULL, ARGUMENT_VECTOR_DELIMITERS))
     {
@@ -90,8 +90,7 @@ Exception argument_vector_tokenize(ArgumentVector instance, StringBuilder value)
 
     instance->buffer[count] = NULL;
     instance->count = count;
-    value->length = 0;
-
+    
     return 0;
 }
 

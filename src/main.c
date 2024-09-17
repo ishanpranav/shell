@@ -6,6 +6,7 @@
 //  - https://www.man7.org/linux/man-pages/man3/basename.3.html
 //  - https://www.man7.org/linux/man-pages/man3/fgets.3p.html
 //  - https://www.man7.org/linux/man-pages/man3/getcwd.3.html
+//  - https://www.man7.org/linux/man-pages/man3/getline.3.html
 //  - https://www.man7.org/linux/man-pages/man2/signal.2.html
 
 #include <errno.h>
@@ -20,61 +21,59 @@
 #include "handler.h"
 #include "parser.h"
 #include "shell.h"
-#include "string_builder.h"
 
-Exception environment_get_current_directory(StringBuilder result)
+String environment_get_current_directory()
 {
-    while (!getcwd(result->buffer, result->capacity))
+    size_t capacity = 4;
+    String buffer = malloc(capacity);
+
+    if (!buffer)
     {
-        switch (errno)
-        {
-        case ERANGE: break;
-        case ENOMEM: return EXCEPTION_OUT_OF_MEMORY;
-        default: return 1;
-        }
-
-        Exception ex = string_builder_ensure_capacity(
-            result,
-            result->capacity * 2);
-
-        if (ex)
-        {
-            return ex;
-        }
+        return NULL;
     }
 
-    result->length = strlen(result->buffer);
-
-    return 0;
-}
-
-static void shell_prompt(StringBuilder currentDirectory)
-{
-    euler_ok(environment_get_current_directory(currentDirectory));
-
-    printf("[nyush %s]$ ", basename(currentDirectory->buffer));
-    fflush(stdout);
-}
-
-static bool shell_read(StringBuilder result)
-{
-    char buffer[SHELL_BUFFER_SIZE];
-
-    do
+    while (!getcwd(buffer, capacity))
     {
-        char* p = fgets(buffer, SHELL_BUFFER_SIZE, stdin);
-
-        euler_ok(string_builder_append_string(result, buffer));
-
-        if (!p)
+        if (errno != ERANGE)
         {
-            return false;
+            return NULL;
         }
-    } 
-    while (result->buffer[result->length - 1] != '\n');
 
-    return true;
+        capacity *= 2;
+        buffer = realloc(buffer, capacity);
+
+        if (!buffer)
+        {
+            return NULL;
+        }
+    }
+    
+    return buffer;
 }
+
+// static void shell_prompt()
+// {
+// }
+
+// static bool shell_read(StringBuilder result)
+// {
+//     char buffer[SHELL_BUFFER_SIZE];
+
+//     do
+//     {
+//         char* p = fgets(buffer, SHELL_BUFFER_SIZE, stdin);
+
+//         euler_ok(string_builder_append_string(result, buffer));
+
+//         if (!p)
+//         {
+//             return false;
+//         }
+//     } 
+//     while (result->buffer[result->length - 1] != '\n');
+
+//     return true;
+// }
 
 int main()
 {
@@ -83,25 +82,39 @@ int main()
     signal(SIGTSTP, SIG_IGN);
 
     struct Parser state;
-    struct StringBuilder line;
-    struct StringBuilder currentDirectory;
+    // struct StringBuilder line;
+    // struct StringBuilder currentDirectory;
 
     euler_ok(parser(&state));
-    euler_ok(string_builder(&line, 0));
-    euler_ok(string_builder(&currentDirectory, 0));
+    // euler_ok(string_builder(&line, 0));
+    // euler_ok(string_builder(&currentDirectory, 0));
 
     Instruction instruction;
 
     do
     {
-        shell_prompt(&currentDirectory);
+        String currentDirectory = environment_get_current_directory();
 
-        if (!shell_read(&line))
-        {
-            break;
+        euler_assert(currentDirectory);
+        printf("[nyush %s]$ ", basename(currentDirectory));
+        free(currentDirectory);
+        fflush(stdout);
+        
+        String line = NULL;
+        size_t length = 0;
+        ssize_t read = getline(&line, &length, stdin);
+
+        if (read == -1)
+        {    
+            free(line);
+            // finalize_string_builder(&currentDirectory);
+            finalize_parser(&state);
+
+            return 0;
         }
-
-        parser_parse(&state, &line);
+        
+        parser_parse(&state, line, read);
+        free(line);
 
         if (state.faulted)
         {
@@ -114,9 +127,5 @@ int main()
     } 
     while (!instruction || instruction->execute(&state.jobs, instruction));
 
-    finalize_string_builder(&line);
-    finalize_string_builder(&currentDirectory);
-    finalize_parser(&state);
-
-    return 0;
+    // finalize_string_builder(&line);
 }

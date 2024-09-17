@@ -72,7 +72,7 @@ Exception parser(Parser instance)
         return ex;
     }
 
-    ex = argument_vector(&instance->args, 0);
+    ex = argument_vector(&instance->arguments, 0);
 
     if (ex)
     {
@@ -88,7 +88,7 @@ Exception parser(Parser instance)
     return 0;
 }
 
-static Symbol parser_classify_token(String value)
+static Symbol parser_classify(String value)
 {
     for (Symbol symbol = 0; symbol < SYMBOLS; symbol++)
     {
@@ -116,16 +116,16 @@ static Symbol parser_classify_token(String value)
 
 static void parser_next(Parser instance)
 {
-    if (instance->index >= instance->args.count)
+    if (instance->index >= instance->arguments.count)
     {
         instance->current = SYMBOL_NONE;
 
         return;
     }
 
-    String token = instance->args.buffer[instance->index];
+    String token = instance->arguments.buffer[instance->index];
 
-    instance->current = parser_classify_token(token);
+    instance->current = parser_classify(token);
     instance->index++;
 }
 
@@ -178,7 +178,7 @@ static void parser_parse_command_text(Parser instance)
     Instruction added = parser_add(instance, execute_handler);
 
     added->length = length;
-    added->payload.arguments = instance->args.buffer + offset;
+    added->payload.arguments = instance->arguments.buffer + offset;
 }
 
 static void parser_parse_file_name(Parser instance)
@@ -194,7 +194,7 @@ static void parser_parse_terminate(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->write = instance->args.buffer[offset];
+        instance->last->write = instance->arguments.buffer[offset];
 
         return;
     }
@@ -205,7 +205,7 @@ static void parser_parse_terminate(Parser instance)
         
         parser_parse_file_name(instance);
 
-        instance->last->append = instance->args.buffer[offset];
+        instance->last->append = instance->arguments.buffer[offset];
 
         return;
     }
@@ -244,7 +244,7 @@ static void parser_parse_command(Parser instance)
 
         Instruction added = parser_add(instance, change_directory_handler);
 
-        added->payload.argument = instance->args.buffer[1];
+        added->payload.argument = instance->arguments.buffer[1];
 
         return;
     }
@@ -272,7 +272,7 @@ static void parser_parse_command(Parser instance)
         
         Instruction added = parser_add(instance, foreground_handler);
 
-        added->payload.argument = instance->args.buffer[1];
+        added->payload.argument = instance->arguments.buffer[1];
 
         return;
     }
@@ -285,7 +285,7 @@ static void parser_parse_command(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->read = instance->args.buffer[offset];
+        instance->last->read = instance->arguments.buffer[offset];
 
         if (instance->current == SYMBOL_PIPE)
         {
@@ -317,33 +317,35 @@ static void parser_parse_command(Parser instance)
 
         parser_parse_file_name(instance);
 
-        instance->last->read = instance->args.buffer[offset];
+        instance->last->read = instance->arguments.buffer[offset];
     }
 
     parser_expect(instance, SYMBOL_NONE);
 }
 
-Exception parser_parse(Parser instance, StringBuilder value)
+Exception parser_parse(Parser instance, String value, size_t length)
 {
-    argument_vector_clear(&instance->args);
+    argument_vector_clear(&instance->arguments);
     
-    String text = string_builder_to_string(value);
+    String duplicate = malloc(length + 1);
 
-    if (!text)
+    if (!duplicate)
     {
         return EXCEPTION_OUT_OF_MEMORY;
     }
 
-    Exception ex = argument_vector_tokenize(&instance->args, value);
+    Exception ex = argument_vector_tokenize(&instance->arguments, value);
 
     if (ex)
     {
         return ex;
     }
 
-    instance->text = text;
+    memcpy(duplicate, value, length + 1);
 
-    if (!instance->args.count)
+    instance->text = duplicate;
+
+    if (!instance->arguments.count)
     {
         return 0;
     }
@@ -360,5 +362,5 @@ void finalize_parser(Parser instance)
 {
     parser_reset(instance);
     finalize_job_collection(&instance->jobs);
-    finalize_argument_vector(&instance->args);
+    finalize_argument_vector(&instance->arguments);
 }

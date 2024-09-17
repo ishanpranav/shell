@@ -9,7 +9,6 @@
 #include <stddef.h>
 #include "euler.h"
 #include "exception.h"
-#include "string_builder.h"
 
 union InstructionPayload
 {

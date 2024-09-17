@@ -21,6 +21,8 @@
 #include <unistd.h>
 #include "handler.h"
 #include "shell.h"
+#define EXECUTE_HANDLER_PREFIX "/usr/bin/"
+#define EXECUTE_HANDLER_PREFIX_LENGTH 9
 
 static void execute_handler_finalize_descriptors(Instruction first)
 {
@@ -124,13 +126,18 @@ static bool execute_handler_run(
     {
         execv(arguments[0], arguments);
 
-        struct StringBuilder path;
+        size_t length = strlen(arguments[0]);
+        size_t totalLength = EXECUTE_HANDLER_PREFIX_LENGTH + length;
+        String path = malloc(totalLength + 1);
+        
+        euler_assert(path);
+        memcpy(path, EXECUTE_HANDLER_PREFIX, EXECUTE_HANDLER_PREFIX_LENGTH);
+        memcpy(path + EXECUTE_HANDLER_PREFIX_LENGTH, arguments[0], length);
 
-        euler_ok(string_builder(&path, 0));
-        euler_ok(string_builder_append_string(&path, "/usr/bin/"));
-        euler_ok(string_builder_append_string(&path, arguments[0]));
-        execv(path.buffer, arguments);
-        finalize_string_builder(&path);
+        path[totalLength] = '\0';
+
+        execv(path, arguments);
+        free(path);
     }
 
     execute_handler_finalize_arguments(arguments);

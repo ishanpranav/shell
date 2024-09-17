@@ -3,12 +3,11 @@
 # Licensed under the MIT license.
 
 CC=clang
-CFLAGS=-D_XOPEN_SOURCE=500 -pedantic -std=c99 -Wall -Wextra
+CFLAGS=-D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L -pedantic -std=c99 -Wall -Wextra
 
 all: nyush
 
-nyush: main.c shell.h argument_vector handlers job_collection parser \
-	string_builder
+nyush: main.c shell.h argument_vector handlers job_collection parser
 	$(CC) $(CFLAGS) *.o main.c -o nyush
 
 argument_vector: argument_vector.c argument_vector.h
@@ -22,9 +21,6 @@ job_collection: job_collection.c job_collection.h
 
 parser: parser.c parser.h
 	$(CC) $(CFLAGS) -c parser.c
-
-string_builder: string_builder.c string_builder.h
-	$(CC) $(CFLAGS) -c string_builder.c
 
 clean:
 	rm -f *.o nyush

@@ -16,7 +16,7 @@ struct Parser
     enum Symbol current;
     size_t index;
     struct JobCollection jobs;
-    struct ArgumentVector args;
+    struct ArgumentVector arguments;
     char* text;
     struct Instruction* first;
     struct Instruction* last;
@@ -25,5 +25,5 @@ struct Parser
 typedef struct Parser* Parser;
 
 Exception parser(Parser instance);
-Exception parser_parse(Parser instance, StringBuilder value);
+Exception parser_parse(Parser instance, String value, size_t length);
 void finalize_parser(Parser instance);
