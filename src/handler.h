@@ -6,10 +6,10 @@
 #include "argument_vector.h"
 #include "instruction.h"
 
-typedef bool (*Handler)(Instruction instruction);
+typedef bool (*Handler)(JobCollection jobs, Instruction instruction);
 
-bool exit_handler(Instruction instruction);
-bool change_directory_handler(Instruction instruction);
-bool foreground_handler(Instruction instruction);
-bool jobs_handler(Instruction instruction);
-bool execute_handler(Instruction instruction);
+bool exit_handler(JobCollection jobs, Instruction instruction);
+bool change_directory_handler(JobCollection jobs, Instruction instruction);
+bool foreground_handler(JobCollection jobs, Instruction instruction);
+bool jobs_handler(JobCollection jobs, Instruction instruction);
+bool execute_handler(JobCollection jobs, Instruction instruction);

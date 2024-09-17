@@ -6,7 +6,6 @@
 #include <string.h>
 #include "euler.h"
 #include "handler.h"
-#include "job_collection.h"
 #include "parser.h"
 
 char* INVALID_CHARS = "><*!`'\"|";
@@ -47,7 +46,7 @@ static Instruction parser_add(Parser instance, Handler handler)
     return result;
 }
 
-void parser_reset(Parser instance)
+static void parser_reset(Parser instance)
 {
     instance->current = SYMBOL_NONE;
     instance->index = 0;
@@ -55,10 +54,7 @@ void parser_reset(Parser instance)
 
     if (instance->first)
     {
-        JobCollection jobs = job_collection_get_default();
-
-        euler_assert(jobs);
-        job_collection_free_instruction(jobs, instance->first);
+        job_collection_free_instruction(&instance->jobs, instance->first);
 
         instance->first = NULL;
     }
@@ -66,12 +62,22 @@ void parser_reset(Parser instance)
     instance->last = NULL;
 }
 
-void parser(Parser instance, ArgumentVector args)
+Exception parser(Parser instance, ArgumentVector args)
 {
+    Exception ex = job_collection(&instance->jobs, 0);
+
+    if (ex)
+    {
+        return ex;
+    }
+
     instance->args = args;
     instance->first = NULL;
+    instance->jobs.aliasReference = &instance->first;
 
     parser_reset(instance);
+
+    return 0;
 }
 
 static Symbol parser_classify_token(String value)
@@ -311,6 +317,8 @@ static void parser_parse_command(Parser instance)
 
 void parser_parse(Parser instance)
 {
+    parser_reset(instance);
+    job_collection_garbage_collect(&instance->jobs);
     parser_next(instance);
     parser_parse_command(instance);
 }
@@ -318,4 +326,5 @@ void parser_parse(Parser instance)
 void finalize_parser(Parser instance)
 {
     parser_reset(instance);
+    finalize_job_collection(&instance->jobs);
 }

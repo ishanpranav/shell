@@ -4,7 +4,9 @@
 
 #include "handler.h"
 
-bool foreground_handler(EULER_UNUSED Instruction instruction)
+bool foreground_handler(
+    EULER_UNUSED JobCollection jobs, 
+    EULER_UNUSED Instruction instruction)
 {
     return true;
 }

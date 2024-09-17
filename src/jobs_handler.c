@@ -4,7 +4,12 @@
 
 #include "handler.h"
 
-bool jobs_handler(EULER_UNUSED Instruction instruction)
+bool jobs_handler(JobCollection jobs, EULER_UNUSED Instruction instruction)
 {
+    for (size_t i = 0; i < jobs->count; i++)
+    {
+        printf("[%zu] %s\n", i + 1, jobs->items[i].text.buffer);
+    }
+
     return true;
 }

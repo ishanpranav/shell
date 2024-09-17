@@ -7,10 +7,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "job_collection.h"
-
-static bool _initialized;
-static struct JobCollection _default;
+#include "euler.h"
+#include "instruction.h"
 
 Exception job_collection(JobCollection instance, size_t capacity)
 {
@@ -32,23 +30,6 @@ Exception job_collection(JobCollection instance, size_t capacity)
     instance->aliasReference = NULL;
 
     return 0;
-}
-
-JobCollection job_collection_get_default()
-{
-    if (_initialized)
-    {
-        return &_default;
-    }
-
-    if (job_collection(&_default, 0))
-    {
-        return NULL;
-    }
-
-    _initialized = true;
-
-    return &_default;
 }
 
 Exception job_collection_ensure_capacity(
@@ -84,8 +65,8 @@ Exception job_collection_ensure_capacity(
 
 Exception job_collection_add(
     JobCollection instance, 
-    pid_t pid, 
-    Instruction item)
+    pid_t pid,
+    Instruction first)
 {
     Exception ex = job_collection_ensure_capacity(
         instance, 
@@ -96,16 +77,21 @@ Exception job_collection_add(
         return ex;
     }
 
+    ex = job(instance->items + instance->count, pid, first);
+
+    if (ex)
+    {
+        return ex;
+    }
+
     if (instance->aliasReference)
     {
-        if (*instance->aliasReference == item)
+        if (*instance->aliasReference == first)
         {
             *instance->aliasReference = NULL;
         }
     }
 
-    instance->items[instance->count].pid = pid;
-    instance->items[instance->count].first = item;
     instance->count++;
 
     return 0;
@@ -120,6 +106,8 @@ Exception job_collection_remove_at(JobCollection instance, size_t index)
 
     instance->count--;
 
+    finalize_job(instance->items + index);
+
     if (index == instance->count)
     {
         return 0;
@@ -133,16 +121,16 @@ Exception job_collection_remove_at(JobCollection instance, size_t index)
     return 0;
 }
 
-void job_collection_free_instruction(JobCollection instance, Instruction item)
+void job_collection_free_instruction(JobCollection instance, Instruction value)
 {
     if (!instance->freeList)
     {
-        instance->freeList = item;
+        instance->freeList = value;
 
         return;
     }
 
-    instance->freeList->nextPipe = item;
+    instance->freeList->nextPipe = value;
 }
 
 void job_collection_garbage_collect(JobCollection instance)
@@ -160,6 +148,11 @@ void job_collection_garbage_collect(JobCollection instance)
 void finalize_job_collection(JobCollection instance)
 {
     instance->count = 0;
+
+    for (size_t i = 0; i < instance->count; i++)
+    {
+        finalize_job(instance->items + i);
+    }
 
     free(instance->items);
     job_collection_garbage_collect(instance);

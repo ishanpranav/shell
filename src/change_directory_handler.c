@@ -9,7 +9,9 @@
 #include <unistd.h>
 #include "handler.h"
 
-bool change_directory_handler(Instruction instruction)
+bool change_directory_handler(
+    EULER_UNUSED JobCollection jobs, 
+    Instruction instruction)
 {
     if (chdir(instruction->payload.argument) == -1)
     {

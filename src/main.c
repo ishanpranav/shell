@@ -18,7 +18,6 @@
 #include "argument_vector.h"
 #include "euler.h"
 #include "handler.h"
-#include "job_collection.h"
 #include "parser.h"
 #include "shell.h"
 #include "string_builder.h"
@@ -83,21 +82,15 @@ int main()
     signal(SIGQUIT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
 
-    JobCollection jobs = job_collection_get_default();
-
-    euler_assert(jobs);
-
     struct StringBuilder line;
     struct StringBuilder currentDirectory;
     struct ArgumentVector args;
-    struct Parser recursiveDescentParser;
+    struct Parser state;
 
     euler_ok(string_builder(&line, 0));
     euler_ok(string_builder(&currentDirectory, 0));
     euler_ok(argument_vector(&args, 0));
-    parser(&recursiveDescentParser, &args);
-
-    jobs->aliasReference = &recursiveDescentParser.first;
+    euler_ok(parser(&state, &args));
 
     Instruction instruction;
 
@@ -118,26 +111,23 @@ int main()
             continue;
         }
 
-        parser_reset(&recursiveDescentParser);
-        job_collection_garbage_collect(jobs);
-        parser_parse(&recursiveDescentParser);
+        parser_parse(&state);
 
-        if (recursiveDescentParser.faulted)
+        if (state.faulted)
         {
             fprintf(stderr, "Error: invalid command\n");
 
             continue;
         }
 
-        instruction = recursiveDescentParser.first;
-    }
-    while (!instruction || instruction->execute(instruction));
+        instruction = state.first;
+    } 
+    while (!instruction || instruction->execute(&state.jobs, instruction));
 
     finalize_string_builder(&line);
     finalize_string_builder(&currentDirectory);
     finalize_argument_vector(&args);
-    finalize_parser(&recursiveDescentParser);
-    finalize_job_collection(jobs);
+    finalize_parser(&state);
 
     return 0;
 }

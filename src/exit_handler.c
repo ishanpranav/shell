@@ -4,7 +4,16 @@
 
 #include "handler.h"
 
-bool exit_handler(EULER_UNUSED Instruction instruction)
+bool exit_handler(
+    JobCollection jobs, 
+    EULER_UNUSED Instruction instruction)
 {
+    if (jobs->count)
+    {
+        fprintf(stderr, "Error: there are suspended jobs\n");
+
+        return true;
+    }
+
     return false;
 }

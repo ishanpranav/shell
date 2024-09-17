@@ -7,8 +7,7 @@ CFLAGS=-D_XOPEN_SOURCE=500 -pedantic -std=c99 -Wall -Wextra
 
 all: nyush
 
-nyush: main.c shell.h argument_vector handlers job_collection parser \
-	string_builder
+nyush: main.c shell.h argument_vector handlers instruction parser string_builder
 	$(CC) $(CFLAGS) *.o main.c -o nyush
 
 argument_vector: argument_vector.c argument_vector.h
@@ -17,8 +16,8 @@ argument_vector: argument_vector.c argument_vector.h
 handlers: *_handler.c handler.h
 	$(CC) $(CFLAGS) -c *_handler.c
 
-job_collection: job_collection.c job_collection.h
-	$(CC) $(CFLAGS) -c job_collection.c
+instruction: job.c job_collection.c instruction.h
+	$(CC) $(CFLAGS) -c job.c job_collection.c
 
 parser: parser.c parser.h
 	$(CC) $(CFLAGS) -c parser.c

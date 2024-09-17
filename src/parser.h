@@ -15,6 +15,7 @@ struct Parser
     bool faulted;
     enum Symbol current;
     size_t index;
+    struct JobCollection jobs;
     struct ArgumentVector* args;
     struct Instruction* first;
     struct Instruction* last;
@@ -22,7 +23,6 @@ struct Parser
 
 typedef struct Parser* Parser;
 
-void parser(Parser instance, ArgumentVector args);
-void parser_reset(Parser instance);
+Exception parser(Parser instance, ArgumentVector args);
 void parser_parse(Parser instance);
 void finalize_parser(Parser instance);
