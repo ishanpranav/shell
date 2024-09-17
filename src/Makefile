@@ -7,7 +7,7 @@ CFLAGS=-D_XOPEN_SOURCE=500 -D_POSIX_C_SOURCE=200809L -pedantic -std=c99 -Wall -W
 
 all: nyush
 
-nyush: main.c shell.h argument_vector handlers job_collection parser
+nyush: main.c argument_vector handlers job_collection parser
 	$(CC) $(CFLAGS) *.o main.c -o nyush
 
 argument_vector: argument_vector.c argument_vector.h

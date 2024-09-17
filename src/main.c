@@ -13,14 +13,12 @@
 #include <libgen.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include "argument_vector.h"
 #include "euler.h"
 #include "handler.h"
 #include "parser.h"
-#include "shell.h"
 
 String environment_get_current_directory()
 {

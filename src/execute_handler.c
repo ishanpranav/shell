@@ -20,7 +20,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "handler.h"
-#include "shell.h"
 #define EXECUTE_HANDLER_PREFIX "/usr/bin/"
 #define EXECUTE_HANDLER_PREFIX_LENGTH 9
 
