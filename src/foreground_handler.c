@@ -7,6 +7,7 @@
 //  - https://www.man7.org/linux/man-pages/man3/strtol.3.html
 //  - https://www.gnu.org/software/libc/manual/html_node/Continuing-Stopped-Jobs.html
 //  - https://www.gnu.org/software/libc/manual/html_node/Foreground-and-Background.html
+//  - https://web.stanford.edu/class/cs110/summer-2021/lecture-notes/lecture-08
 
 #include <sys/wait.h>
 #include <signal.h>
@@ -24,15 +25,14 @@ bool foreground_handler(JobCollection jobs, Instruction instruction)
     }
     
     struct Job item = jobs->items[job - 1];
-
+    
     euler_ok(job_collection_remove_at(jobs, job - 1));
-
     kill(item.pid, SIGCONT);
-
+    
     int status;
     
-    item.pid = waitpid(item.pid, &status, WUNTRACED);
-
+    euler_assert(waitpid(item.pid, &status, WUNTRACED) != -1);
+    
     if (WIFSTOPPED(status))
     {
         euler_ok(job_collection_add(jobs, item.pid, item.first));
@@ -44,4 +44,3 @@ bool foreground_handler(JobCollection jobs, Instruction instruction)
 
     return true;
 }
-

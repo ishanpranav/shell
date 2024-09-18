@@ -68,7 +68,6 @@ int main()
 
         parser_parse(&state, line, length);
 
-
         if (state.faulted)
         {
             fprintf(stderr, "Error: invalid command\n");

@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,8 +44,8 @@ static void execute_handler_finalize_arguments(String values[])
 }
 
 static bool execute_handler_run(
-    JobCollection jobs, 
-    Instruction first, 
+    JobCollection jobs,
+    Instruction first,
     Instruction current)
 {
     String* arguments = malloc((current->length + 1) * sizeof * arguments);
@@ -67,10 +68,10 @@ static bool execute_handler_run(
     if (pid)
     {
         execute_handler_finalize_arguments(arguments);
-            
+
         int status;
-        
-        pid = waitpid(pid, &status, WUNTRACED);
+
+        euler_assert(waitpid(pid, &status, WUNTRACED) != -1);
 
         if (WIFSTOPPED(status))
         {
@@ -79,6 +80,8 @@ static bool execute_handler_run(
 
         return true;
     }
+
+    signal(SIGTSTP, SIG_DFL);
 
     if (current->write)
     {
@@ -127,7 +130,7 @@ static bool execute_handler_run(
         size_t length = strlen(arguments[0]);
         size_t totalLength = EXECUTE_HANDLER_PREFIX_LENGTH + length;
         String path = malloc(totalLength + 1);
-        
+
         euler_assert(path);
         memcpy(path, EXECUTE_HANDLER_PREFIX, EXECUTE_HANDLER_PREFIX_LENGTH);
         memcpy(path + EXECUTE_HANDLER_PREFIX_LENGTH, arguments[0], length);
@@ -166,6 +169,8 @@ bool execute_handler(JobCollection jobs, Instruction instruction)
         {
             continue;
         }
+
+        signal(SIGTSTP, SIG_DFL);
 
         if (p != instruction)
         {

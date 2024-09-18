@@ -333,11 +333,17 @@ static void parser_parse_command(Parser instance)
 
 Exception parser_parse(Parser instance, String value, size_t length)
 {
+    parser_reset(instance);
     argument_vector_clear(&instance->arguments);
     
     while (isspace(value[length - 1]))
     {
         length--;
+    }
+
+    if (!length)
+    {
+        return 0;
     }
 
     String duplicate = malloc(length + 1);
@@ -365,7 +371,6 @@ Exception parser_parse(Parser instance, String value, size_t length)
         return 0;
     }
 
-    parser_reset(instance);
     job_collection_garbage_collect(&instance->jobs);
     parser_next(instance);
     parser_parse_command(instance);
