@@ -103,7 +103,6 @@ void argument_vector_clear(ArgumentVector instance)
         free(instance->buffer[instance->count]);
     }
 
-    instance->count = 0;
     instance->buffer[0] = NULL;
 }
 
