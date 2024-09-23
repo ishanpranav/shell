@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "euler.h"
-#include "exception.h"
 
 union InstructionPayload
 {

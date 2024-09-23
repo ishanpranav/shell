@@ -6,7 +6,6 @@
 #define ARGUMENT_VECTOR_57fd44ec18234de6ad3bdfba493e374b
 #include <stddef.h>
 #include "euler.h"
-#include "exception.h"
 
 struct ArgumentVector
 {
