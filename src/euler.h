@@ -15,10 +15,10 @@
     Exception _ex = (ex); \
     if (_ex) { \
     fprintf(stderr, "Error: %d at %s line %d.\n", _ex, __FILE__, __LINE__); \
-    exit(_ex); } EULER_END_MACRO
+    exit(EXIT_FAILURE); } EULER_END_MACRO
 #define euler_assert(condition) EULER_MACRO if (!(condition)) { \
     fprintf(stderr, "Faulted: %s line %d.\n", __FILE__, __LINE__); \
-    exit(1); } EULER_END_MACRO
+    exit(EXIT_FAILURE); } EULER_END_MACRO
 #ifdef __GNUC__
 #define EULER_UNUSED __attribute__((unused))
 #else
